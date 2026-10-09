@@ -14,7 +14,8 @@
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
 </script>
 <script>
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches && !/[?&]motion/.test(location.search)) document.documentElement.classList.add('reduced');
+  /* L'animation suit le défilement (c'est le lecteur qui la pilote) : elle reste active même en mouvement réduit. Repli statique seulement sur ?static ou sans WebGL. */
+  if (/[?&]static/.test(location.search)) document.documentElement.classList.add('reduced');
 </script>
 </head>
 <body>
