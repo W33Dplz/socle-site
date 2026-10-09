@@ -5,202 +5,184 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Socle</title>
 <meta name="description" content="Turn any small company into an AI-native company, without replacing a single tool.">
-<meta name="color-scheme" content="light dark">
+<meta name="color-scheme" content="light">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#fbfaf7; --surface:#ffffff; --ink:#1c1b19; --muted:#5d5a54; --line:#e3e0d8;
-  --accent:#2f4b7c; --accent-soft:#e8edf6; --layer-a:#f1efe9; --layer-b:#e8edf6; --layer-c:#f1efe9;
-  --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
-}
-@media (prefers-color-scheme: dark){
-  :root{
-    --bg:#131416; --surface:#1b1c1f; --ink:#ecebe7; --muted:#a3a19a; --line:#2e3035;
-    --accent:#9db6e3; --accent-soft:#222b3d; --layer-a:#1d1e22; --layer-b:#222b3d; --layer-c:#1d1e22;
-  }
-}
-*{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.65;overflow-x:hidden}
-.wrap{max-width:760px;margin:0 auto;padding:0 16px}
-a{color:var(--accent);text-underline-offset:3px}
-a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
-header.top{padding:20px 0;border-bottom:1px solid var(--line)}
-header.top .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.brand{font-family:var(--serif);font-weight:600;font-size:1.25rem;letter-spacing:.01em}
-nav a{margin-left:16px;font-size:.9rem;color:var(--muted);text-decoration:none}
-nav a:hover{color:var(--ink)}
-.hero{padding:56px 0 48px}
-.pill{display:inline-block;font-size:.8rem;color:var(--muted);border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;margin:0 0 24px}
-h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.75rem,5.6vw,2.6rem);line-height:1.2;margin:0 0 20px;letter-spacing:-.01em}
-.sub{font-size:1.1rem;color:var(--muted);margin:0 0 28px;max-width:34em}
-.links{display:flex;flex-wrap:wrap;gap:12px}
-.btn{display:inline-block;padding:10px 18px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-decoration:none;font-size:.95rem;font-weight:500}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
-.btn:hover{border-color:var(--accent)}
-section{padding:44px 0;border-top:1px solid var(--line)}
-h2{font-family:var(--serif);font-weight:600;font-size:1.5rem;margin:0 0 20px;line-height:1.3}
-p{margin:0 0 16px}
-.diagram{width:100%;height:auto;display:block;margin:8px 0 28px}
-.diagram text{font-family:var(--sans);fill:var(--ink)}
-.diagram .t{font-size:15px;font-weight:600}
-.diagram .s{font-size:12.5px;fill:var(--muted)}
-.diagram .box{stroke:var(--line);stroke-width:1.5}
-.diagram .arrow{stroke:var(--accent);stroke-width:1.5;fill:none}
-.diagram .head{fill:var(--accent)}
-.steps{list-style:none;counter-reset:s;margin:0 0 24px;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-.steps li{counter-increment:s;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:10px 10px 12px;font-size:.88rem;line-height:1.35;font-weight:500}
-.steps li::before{content:counter(s);display:block;font-size:.75rem;color:var(--accent);margin-bottom:4px;font-weight:600}
-.lead{color:var(--muted);font-size:.95rem;margin-bottom:12px}
-.cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.card{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:20px}
-.card h3{font-size:1rem;margin:0 0 8px;font-weight:600}
-.card p{margin:0;font-size:.95rem;color:var(--muted)}
-ul.plain{padding-left:20px;margin:0 0 16px}
-ul.plain li{margin-bottom:6px}
-.timeline{list-style:none;margin:0;padding:0;border-left:2px solid var(--line)}
-.timeline li{position:relative;padding:0 0 18px 20px}
-.timeline li::before{content:"";position:absolute;left:-6px;top:9px;width:10px;height:10px;border-radius:50%;background:var(--accent)}
-.timeline b{font-weight:600}
-footer{border-top:1px solid var(--line);padding:36px 0 56px;color:var(--muted);font-size:.88rem}
-footer p{margin-bottom:10px}
-@media (max-width:640px){
-  .hero{padding:36px 0 32px}
-  .cards{grid-template-columns:1fr}
-  .steps{grid-template-columns:1fr}
-  .steps li{display:flex;gap:10px;align-items:baseline}
-  .steps li::before{margin:0}
-  nav{display:none}
-  section{padding:36px 0}
-}
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+<script>
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches && !/[?&]motion/.test(location.search)) document.documentElement.classList.add('reduced');
+</script>
 </head>
 <body>
 <header class="top">
-  <div class="wrap">
-    <span class="brand">Socle</span>
-    <nav aria-label="Sections">
-      <a href="#how">How it works</a>
-      <a href="#status">Where it stands</a>
-      <a href="#record">Track record</a>
-      <a href="#founder">Founder</a>
+  <a class="brand" href="#top"><i></i>Socle</a>
+  <div class="right">
+    <div class="lang" role="group" data-ia="aria-label=aria.lang"><button type="button" data-lang="en">EN</button><button type="button" data-lang="fr">FR</button></div>
+    <nav class="main">
+      <a href="#how" data-i="nav.how"></a>
+      <a href="#status" data-i="nav.status"></a>
+      <a href="#record" data-i="nav.record"></a>
+      <a href="#founder" data-i="nav.founder"></a>
+      <a class="cta" href="mailto:info@getsocle.com" data-i="nav.contact"></a>
     </nav>
   </div>
 </header>
 
-<main>
-<div class="wrap">
+<section id="story">
+  <div id="stage">
+    <canvas id="gl" role="img" data-ia="aria-label=aria.canvas"></canvas>
+    <div id="cards"></div>
+    <div id="veil"></div>
 
-<div class="hero">
-  <p class="pill">Pre-incorporation project · Brussels · 2026</p>
-  <h1>Turn any small company into an AI-native company, without replacing a single tool.</h1>
-  <p class="sub">Socle connects to the tools your team already uses, builds the company brain automatically with Claude, and lets employees work with AI agents that understand the business and act on it safely. For companies of 10 to 200 people, in any sector.</p>
-  <div class="links">
-    <a class="btn primary" href="mailto:info@getsocle.com">Contact</a>
-    <a class="btn" href="https://www.linkedin.com/in/charlesdb/" rel="noopener">Founder on LinkedIn</a>
+    <div class="chap" data-a="0" data-b=".075" id="top">
+      <p class="pill" data-i="hero.pill"></p>
+      <h1 data-i="hero.h1"></h1>
+      <p data-i="hero.sub"></p>
+      <div class="links">
+        <a class="btn primary" href="mailto:info@getsocle.com" data-i="hero.contact"></a>
+        <a class="btn" href="#how" data-i="hero.how"></a>
+      </div>
+    </div>
+
+    <div class="chap" data-a=".09" data-b=".26">
+      <h2 data-i="c1.h"></h2>
+      <p data-i="c1.p"></p>
+    </div>
+
+    <div class="chap" data-a=".285" data-b=".565">
+      <h2 data-i="c2.h"></h2>
+      <p data-i="c2.p"></p>
+    </div>
+
+    <div class="chap" data-a=".58" data-b=".70">
+      <h2 data-i="c3.h"></h2>
+      <p data-i="c3.p"></p>
+    </div>
+
+    <div class="chap" data-a=".715" data-b=".825">
+      <h2 data-i="c4.h"></h2>
+    </div>
+
+    <div class="chap" data-a=".84" data-b=".93">
+      <h2 data-i="c5.h"></h2>
+    </div>
+
+    <div class="chap center" data-a=".965" data-b="1.01">
+      <h2 data-i="fin.h"></h2>
+      <div class="links">
+        <a class="btn primary" href="mailto:info@getsocle.com" data-i="fin.contact"></a>
+        <a class="btn" href="#how" data-i="fin.how"></a>
+      </div>
+    </div>
+
+    <div class="rail" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="scrollhint" id="hint" data-i="hint"></div>
+    <div class="note" data-i="note"></div>
   </div>
+</section>
+
+<div id="still">
+  <div class="step"><div><span class="kick" data-i="st1.k"></span><h1 data-i="st1.h"></h1><p data-i="st1.p"></p></div><img src="assets/temps-1.jpg" data-ia="alt=st1.alt" alt="" loading="lazy"></div>
+  <div class="step"><div><span class="kick" data-i="st2.k"></span><h2 data-i="st2.h"></h2><p data-i="st2.p"></p></div><img src="assets/temps-2.jpg" data-ia="alt=st2.alt" alt="" loading="lazy"></div>
+  <div class="step"><div><span class="kick" data-i="st3.k"></span><h2 data-i="st3.h"></h2><p data-i="st3.p"></p></div><img src="assets/temps-3.jpg" data-ia="alt=st3.alt" alt="" loading="lazy"></div>
+  <div class="step"><div><span class="kick" data-i="st4.k"></span><h2 data-i="st4.h"></h2><p data-i="st4.p"></p></div><img src="assets/temps-4.jpg" data-ia="alt=st4.alt" alt="" loading="lazy"></div>
 </div>
 
-<section id="how">
-  <h2>How it works</h2>
-  <p><b>1. Connect.</b> Socle plugs into the tools the team already uses (ERP, accounting, CRM, SharePoint, spreadsheets, email), read-only first. Nothing to migrate.</p>
-  <p><b>2. Build the company brain automatically.</b> Claude agents read the connected data, extract clients, jobs, projects and costs, recognise the same entity across systems, and propose a company model that a person validates.</p>
-  <p><b>3. Work and act.</b> Employees work in Socle Workspace with agents that know the business. When an agent needs to change something, it goes through a governed action.</p>
-  <p>Most AI platforms start from agents, built one use case at a time. Socle starts from the company brain, so every new agent inherits the same understanding of the business.</p>
+<main class="rest">
+<div class="wrap">
+
+<section id="how" class="blk">
+  <h2 class="sec" data-i="how.h"></h2>
+  <p class="biglead" data-i="how.lead"></p>
+  <p data-i="how.intro"></p>
+  <p data-i="how.p1"></p>
+  <p data-i="how.p2"></p>
+  <p data-i="how.p3"></p>
+  <p data-i="how.p4"></p>
   <svg class="diagram" viewBox="0 0 640 360" role="img" aria-labelledby="dt dd" xmlns="http://www.w3.org/2000/svg">
-    <title id="dt">Socle Workspace and Socle Core on top of existing tools</title>
-    <desc id="dd">Socle Workspace, the chat interface, sits on top of Socle Core, the company brain built automatically from connected tools, with governed actions exposed over MCP, which sits on top of the existing tools such as ERP, accounting, CRM, SharePoint and fleet tracking.</desc>
+    <title id="dt" data-i="diag.title"></title>
+    <desc id="dd" data-i="diag.desc"></desc>
     <defs>
       <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="head"/></marker>
     </defs>
-    <rect class="box" x="10" y="10" width="620" height="92" rx="8" fill="var(--layer-a)"/>
-    <text class="t" x="28" y="38">Socle Workspace</text>
-    <text class="s" x="28" y="62">Our chat workspace, a fork of open-source LibreChat,</text>
-    <text class="s" x="28" y="82">where employees work with AI agents (Claude-first)</text>
+    <rect class="box" x="10" y="10" width="620" height="92" rx="12" fill="#f4f1ea"/>
+    <text class="t" x="28" y="38" data-i="diag.ws.t"></text>
+    <text class="s" x="28" y="62" data-i="diag.ws.s1"></text>
+    <text class="s" x="28" y="82" data-i="diag.ws.s2"></text>
 
     <line class="arrow" x1="320" y1="104" x2="320" y2="128" marker-end="url(#ah)"/>
 
-    <rect class="box" x="10" y="130" width="620" height="102" rx="8" fill="var(--layer-b)" stroke="var(--accent)"/>
-    <text class="t" x="28" y="158">Socle Core</text>
-    <text class="s" x="28" y="182">The company brain, built automatically from your tools:</text>
-    <text class="s" x="28" y="202">clients, jobs, projects, costs, one identity across tools.</text>
-    <text class="s" x="28" y="222">Governed actions exposed over MCP.</text>
+    <rect class="box" x="10" y="130" width="620" height="102" rx="12" fill="#e9eefb" stroke="#2f4b9c"/>
+    <text class="t" x="28" y="158" data-i="diag.core.t"></text>
+    <text class="s" x="28" y="182" data-i="diag.core.s1"></text>
+    <text class="s" x="28" y="202" data-i="diag.core.s2"></text>
+    <text class="s" x="28" y="222" data-i="diag.core.s3"></text>
 
     <line class="arrow" x1="320" y1="234" x2="320" y2="258" marker-end="url(#ah)"/>
 
-    <rect class="box" x="10" y="260" width="620" height="90" rx="8" fill="var(--layer-c)"/>
-    <text class="t" x="28" y="288">Your existing tools (nothing to migrate)</text>
-    <text class="s" x="28" y="312">ERP, accounting, CRM, SharePoint, spreadsheets,</text>
-    <text class="s" x="28" y="332">email: connected read-only first</text>
+    <rect class="box" x="10" y="260" width="620" height="90" rx="12" fill="#f4f1ea"/>
+    <text class="t" x="28" y="288" data-i="diag.tools.t"></text>
+    <text class="s" x="28" y="312" data-i="diag.tools.s1"></text>
+    <text class="s" x="28" y="332" data-i="diag.tools.s2"></text>
+    <rect x="440" y="276" width="14" height="14" rx="4" fill="#E8A33D"/><rect x="460" y="276" width="14" height="14" rx="4" fill="#E0589F"/><rect x="480" y="276" width="14" height="14" rx="4" fill="#3FB27F"/><rect x="500" y="276" width="14" height="14" rx="4" fill="#4A8CF2"/><rect x="520" y="276" width="14" height="14" rx="4" fill="#8B6BEA"/><rect x="540" y="276" width="14" height="14" rx="4" fill="#F26D5B"/>
   </svg>
 
-  <p class="lead">A governed action, step by step</p>
+  <p class="lead" data-i="steps.lead"></p>
   <ol class="steps">
-    <li>Read</li>
-    <li>Dry-run</li>
-    <li>Human approval</li>
-    <li>Logged</li>
-    <li>Written back through an adapter</li>
+    <li style="--c:#E8A33D" data-i="step.1"></li>
+    <li style="--c:#3FB27F" data-i="step.2"></li>
+    <li style="--c:#4A8CF2" data-i="step.3"></li>
+    <li style="--c:#8B6BEA" data-i="step.4"></li>
+    <li style="--c:#F26D5B" data-i="step.5"></li>
   </ol>
-  <p>Nothing is replaced: employees keep their tools, the company owns its model and data, and it can change model provider without rebuilding.</p>
+  <p data-i="how.end"></p>
 </section>
 
-<section id="status">
-  <h2>Where it stands</h2>
-  <p>Socle is pre-product. I am a solo founder and there is no legal entity yet. The automatic brain-building is the core I am building now. Everything below was done by hand at real companies, and it is exactly what Socle will automate.</p>
+<section id="status" class="blk">
+  <h2 class="sec" data-i="status.h"></h2>
+  <p data-i="status.p"></p>
 </section>
 
-<section id="record">
-  <h2>Track record</h2>
+<section id="record" class="blk">
+  <h2 class="sec" data-i="record.h"></h2>
   <div class="cards">
-    <article class="card">
-      <h3>Joinery and construction company</h3>
-      <p>First Socle module in progress: rebuilding job costing across four systems linked by a job code, matched by hand. Controls already delivered surfaced unallocated 2026 overhead and errors in the master costing file.</p>
-    </article>
-    <article class="card">
-      <h3>Real-estate developer, 15 people</h3>
-      <p>Paid diagnostic, September 2026. Analysed 21 spreadsheets (46,000+ cells) and their Odoo setup, found three project-naming systems with no mapping between them, and traced a margin drop 14 months before their reporting showed it.</p>
-    </article>
-    <article class="card">
-      <h3>ShiftIQ, staff-planning SaaS</h3>
-      <p>Multi-tenant SaaS I built with Claude Code and Lovable: 1,292 commits, 555 automated tests. A retailer used it for its staff planning this summer.</p>
-    </article>
-    <article class="card">
-      <h3>Delivery channel</h3>
-      <p>Since October 2026 I deliver AI onboarding missions for SMEs as a subcontractor of a Belgian AI company.</p>
-    </article>
+    <article class="pcard" style="--c:#E8A33D"><h3 data-i="rec1.h"></h3><p data-i="rec1.p"></p></article>
+    <article class="pcard" style="--c:#3FB27F"><h3 data-i="rec2.h"></h3><p data-i="rec2.p"></p></article>
+    <article class="pcard" style="--c:#4A8CF2"><h3 data-i="rec3.h"></h3><p data-i="rec3.p"></p></article>
+    <article class="pcard" style="--c:#8B6BEA"><h3 data-i="rec4.h"></h3><p data-i="rec4.p"></p></article>
   </div>
 </section>
 
-<section id="build">
-  <h2>How I build</h2>
-  <p>Claude Code is my build stack and every Socle agent runs on Claude first.</p>
+<section id="build" class="blk">
+  <h2 class="sec" data-i="build.h"></h2>
+  <p data-i="build.p"></p>
   <ul class="plain">
-    <li>19 reusable skills and adversarial review agents</li>
-    <li>A state file per project, updated at each session</li>
-    <li>No claim shipped without a check: tests, measurements or a second reviewer.</li>
+    <li data-i="build.l1"></li>
+    <li data-i="build.l2"></li>
+    <li data-i="build.l3"></li>
   </ul>
 </section>
 
-<section id="timeline">
-  <h2>Timeline</h2>
+<section id="timeline" class="blk">
+  <h2 class="sec" data-i="tl.h"></h2>
   <ul class="timeline">
-    <li><b>March 2026:</b> started building with Claude Code</li>
-    <li><b>Summer 2026:</b> ShiftIQ used by a retailer for staff planning</li>
-    <li><b>August 2026:</b> Socle architecture note</li>
-    <li><b>September 2026:</b> paid diagnostic for a real-estate developer</li>
-    <li><b>Late September 2026:</b> first module work at a joinery company</li>
-    <li><b>October 2026:</b> subcontracted AI onboarding missions for SMEs</li>
+    <li style="--c:#E8A33D" data-i="tl.1"></li>
+    <li style="--c:#3FB27F" data-i="tl.2"></li>
+    <li style="--c:#4A8CF2" data-i="tl.3"></li>
+    <li style="--c:#8B6BEA" data-i="tl.4"></li>
+    <li style="--c:#F26D5B" data-i="tl.5"></li>
+    <li style="--c:#2f4b9c" data-i="tl.6"></li>
   </ul>
 </section>
 
-<section id="founder">
-  <h2>Founder</h2>
-  <p>Charles de Bellefroid, Brussels. Master in Entrepreneurship, Solvay Brussels School. About ten years of founding companies, including CheeeseBOX (co-founder and CEO, 14 people, over €1M group revenue).</p>
-  <p><a href="https://www.linkedin.com/in/charlesdb/" rel="noopener">Founder on LinkedIn</a></p>
+<section id="founder" class="blk">
+  <h2 class="sec" data-i="founder.h"></h2>
+  <p data-i="founder.p"></p>
+  <p><a href="https://www.linkedin.com/in/charlesdb/" rel="noopener" data-i="founder.link"></a></p>
 </section>
 
 </div>
@@ -208,9 +190,34 @@ footer p{margin-bottom:10px}
 
 <footer>
   <div class="wrap">
-    <p><strong>Legal notice.</strong> Socle is a project in pre-incorporation, led by Charles de Bellefroid, Brussels, Belgium. No legal entity has been created yet. Contact: <a href="mailto:info@getsocle.com">info@getsocle.com</a></p>
-    <p>Built with Claude</p>
+    <p data-i="foot.legal"></p>
+    <p data-i="foot.built"></p>
   </div>
 </footer>
+
+<script>(function(){var hd=document.querySelector('header.top');function f(){var st=document.getElementById('story');var past=st&&st.getBoundingClientRect().bottom<innerHeight*0.5;hd.classList.toggle('solid',past||document.documentElement.classList.contains('reduced')||document.documentElement.classList.contains('nogl'));}addEventListener('scroll',f,{passive:true});addEventListener('load',f);f();})();</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+  window.__target = 0;
+  (function(){
+    if (document.documentElement.classList.contains('reduced')) return;
+    var story = document.getElementById('story');
+    function fallback(){
+      var r = story.getBoundingClientRect(), h = story.offsetHeight - innerHeight;
+      window.__target = Math.min(1, Math.max(0, -r.top / h));
+    }
+    if (window.gsap && window.ScrollTrigger) {
+      gsap.registerPlugin(ScrollTrigger);
+      ScrollTrigger.create({ trigger: story, start: 'top top', end: 'bottom bottom', onUpdate: function(s){ window.__target = s.progress; } });
+    } else { addEventListener('scroll', fallback, {passive:true}); fallback(); }
+  })();
+</script>
+<script type="module">
+  import './assets/i18n.js';
+  if (!document.documentElement.classList.contains('reduced')) {
+    import('./assets/scene.js').catch(function(e){ console.error(e); document.documentElement.classList.add('nogl'); });
+  }
+</script>
 </body>
 </html>
