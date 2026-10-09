@@ -16,7 +16,10 @@ let renderer;
 try {
   renderer = new THREE.WebGLRenderer({canvas, antialias: !MOBILE, alpha: true, preserveDrawingBuffer: Q.has('cap'), powerPreference: 'high-performance'});
 } catch (e) { root.classList.add('nogl'); throw e; }
-renderer.setPixelRatio(Math.min(devicePixelRatio || 1, MOBILE ? 1.5 : 1.75));
+/* Résolution plafonnée puis ajustée en continu selon le temps réel d'une image (voir boucle). */
+const PR_MAX = Math.min(devicePixelRatio || 1, MOBILE ? 1.25 : 1.5), PR_MIN = MOBILE ? .7 : .8;
+let PR = PR_MAX;
+renderer.setPixelRatio(PR);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -33,7 +36,7 @@ scene.add(new THREE.HemisphereLight('#ffffff', '#e8e0cf', 0.9));
 const sun = new THREE.DirectionalLight('#fff3dc', 2.3);
 sun.position.set(-12, 50, 20);
 sun.castShadow = true;
-sun.shadow.mapSize.set(MOBILE ? 1536 : 3072, MOBILE ? 1536 : 3072);
+sun.shadow.mapSize.set(MOBILE ? 1024 : 1536, MOBILE ? 1024 : 1536);
 Object.assign(sun.shadow.camera, {left: -36, right: 36, top: 36, bottom: -36, near: 5, far: 130});
 sun.shadow.radius = 5; sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.05;
 scene.add(sun);
@@ -232,7 +235,7 @@ function agent(s = 1) {
 /* "?" au-dessus des personnages bloqués */
 const qTex = canvasTex(128, 128, (x, w, h) => {
   x.fillStyle = '#fff'; x.beginPath(); x.arc(64, 64, 56, 0, 7); x.fill(); x.strokeStyle = '#9aa3b8'; x.lineWidth = 6; x.stroke();
-  x.fillStyle = '#1d2433'; x.font = '700 78px Inter, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('?', 64, 70);
+  x.fillStyle = '#1d2433'; x.font = '700 78px "Schibsted Grotesk", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('?', 64, 70);
 });
 const patrol = [];
 [['erp', 0, 1.8], ['mail', 2, 1.4]].forEach(([k, idx, edge]) => {
@@ -1022,13 +1025,32 @@ let P = 0, last = performance.now(), frames = 0, T0 = performance.now();
 function draw(p, t) { update(p, t); renderer.render(scene, camera); }
 window.__draw = (p, t) => { P = p; draw(p, t); };
 window.__ready = false;
+/* Pas de rendu quand la scène est hors écran (le reste de la page défile sans payer la 3D). */
+let onScreen = true;
+new IntersectionObserver(e => { onScreen = e[0].isIntersecting; }).observe(document.getElementById('story'));
+/* Résolution adaptative : si les images dépassent ~22 ms en moyenne, on baisse la densité de pixels ; on remonte doucement si la marge revient. */
+let acc = 0, accN = 0;
+function adapt(ms) {
+  acc += ms; accN++; if (accN < 30) return;
+  const avg = acc / accN; acc = 0; accN = 0;
+  const next = avg > 22 ? Math.max(PR_MIN, PR - .15) : (avg < 13 ? Math.min(PR_MAX, PR + .1) : PR);
+  if (Math.abs(next - PR) > .01) { PR = next; renderer.setPixelRatio(PR); resize(); }
+}
 function loop(now) {
-  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  const ms = now - last, dt = Math.min(.05, ms / 1000); last = now;
   const target = window.__target || 0;
   P += (target - P) * (1 - Math.exp(-dt * 5.5));
   if (Math.abs(target - P) < 1e-4) P = target;
-  if (!Q.has('freeze')) draw(P, (now - T0) / 1000);
+  if (onScreen && !document.hidden && !Q.has('freeze')) { draw(P, (now - T0) / 1000); if (frames > 10 && ms < 200) adapt(ms); }
   frames++; if (frames === 8) window.__ready = true;
   requestAnimationFrame(loop);
 }
-document.fonts.ready.then(() => { draw(0, 0); requestAnimationFrame(loop); });
+/* Préchauffage : on dessine une fois chaque phase du récit, une par image, derrière l'affiche,
+   pour que le navigateur compile tous les matériaux avant que le lecteur n'y arrive (sinon saccade de 50 à 90 ms à chaque nouvelle phase). */
+function reveal() { root.classList.add('gl-on'); window.__revealAt = Math.round(performance.now()); }
+function warm(i) {
+  const steps = [0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1];
+  if (i < steps.length && !STILL) { draw(steps[i], 1); requestAnimationFrame(() => warm(i + 1)); return; }
+  P = window.__target || 0; draw(P, 0); last = performance.now(); reveal(); requestAnimationFrame(loop);
+}
+document.fonts.ready.then(() => warm(0));
