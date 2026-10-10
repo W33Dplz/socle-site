@@ -760,7 +760,9 @@ function resize() {
   camera.setViewOffset(W, H, sx, sy, W, H); camera.updateProjectionMatrix();
 }
 resize(); addEventListener('resize', resize);
-function distFactor(p) { return ASP < 1.35 ? Math.pow(1.35 / ASP, lerp(lerp(.3, .66, sm(seg(p, .26, .4))), .46, sm(seg(p, .52, .62)))) : 1; }
+/* écran large : le titre occupe le tiers gauche, la scène doit tenir dans les deux tiers droits */
+function wideFit(p) { return 1.08 + .17 * (1 - sm(seg(p, .26, .34))) + .1 * Math.sin(Math.PI * seg(p, .26, .38)) + .3 * Math.sin(Math.PI * seg(p, .40, .56)); }
+function distFactor(p) { return ASP < 1.35 ? Math.pow(1.35 / ASP, lerp(lerp(.42, .7, sm(seg(p, .26, .4))), .46, sm(seg(p, .52, .62)))) : 1; }
 
 /* ------------------------------------------------------------------ mise à jour de la scène */
 const _v = new THREE.Vector3();
@@ -781,9 +783,9 @@ function update(P, time) {
   /* caméra */
   let [az, el, d, tx, ty, tz] = camState(P);
   if (ASP < 1) { az = lerp(az, 8, sm(seg(P, .3, .45))); el = lerp(el, Math.max(26, el * .8), sm(seg(P, .4, .55))); }
-  const ar = az * Math.PI / 180, er = el * Math.PI / 180, dd = d * distFactor(P) * (ASP < 1 ? lerp(1, .72, sm(seg(P, .9, .955))) : 1);
+  const ar = az * Math.PI / 180, er = el * Math.PI / 180, dd = d * distFactor(P) * (ASP < 1 ? lerp(1, .72, sm(seg(P, .9, .955))) : wideFit(P));
   camera.position.set(tx + dd * Math.cos(er) * Math.sin(ar), ty + dd * Math.sin(er), tz + dd * Math.cos(er) * Math.cos(ar));
-  if (ASP >= 1 && !STILL) { camera.setViewOffset(W, H, -W * lerp(.27, .12, sm(seg(P, .04, .45))), 0, W, H); }
+  if (ASP >= 1 && !STILL) { camera.setViewOffset(W, H, -W * lerp(.19, .18, sm(seg(P, .04, .3))), 0, W, H); }
   let shake = 0; KEYS.forEach((k, i) => { const lt = .52 + i * .012 + .075; shake += Math.sin(Math.PI * seg(p, lt, lt + .035)); });
   camera.position.x += shake * .22 * Math.sin(time * 61); camera.position.y += shake * .26 * Math.sin(time * 47 + 1);
   camera.lookAt(tx, ty, tz); camera.updateMatrixWorld();
