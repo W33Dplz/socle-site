@@ -771,6 +771,7 @@ function place(el, pos, op, dx = 0, dy = 0, sc = 1) {
   el.style.opacity = op.toFixed(3);
 }
 const islandWorld = {};
+const STEPS = [.08, .27, .57, .70, .83, 1];
 const QM = [[0, 0], [.27, .30], [.56, .62], [.70, .80], [.82, .80], [.93, .96], [1, 1]];
 function qmap(P) { for (let i = 0; i < QM.length - 1; i++) if (P <= QM[i + 1][0]) return lerp(QM[i][1], QM[i + 1][1], (P - QM[i][0]) / (QM[i + 1][0] - QM[i][0])); return 1; }
 let lastFilter = '';
@@ -1005,17 +1006,16 @@ function update(P, time) {
 
   /* chapitres de texte */
   chaps.forEach(c => {
+    if (c.id === 'top') { c.style.opacity = 1; c.style.transform = ''; c.classList.add('on'); return; }
     const a = parseFloat(c.dataset.a), b = parseFloat(c.dataset.b);
     let op = Math.min(a <= 0 ? 1 : sm(seg(P, a, a + .022)), b > 1 ? 1 : 1 - sm(seg(P, b - .022, b)));
-    if (MOBILE) { const ci = chaps.indexOf(c), B = [0, .085, .275, .57, .705, .83, .95, 1.01], A0 = B[ci], B0 = B[ci + 1]; op = Math.min(ci === 0 ? 1 : seg(P, A0, A0 + .012), ci === chaps.length - 1 ? 1 : 1 - seg(P, B0 - .012, B0)); }
     c.style.opacity = op.toFixed(3);
     const ty = (a <= 0 ? 0 : (1 - sm(seg(P, a, a + .03))) * 26) - (b > 1 ? 0 : sm(seg(P, b - .03, b)) * 18);
-    c.style.transform = c.classList.contains('center') ? `translateY(${ty.toFixed(1)}px)` : (innerWidth < 760 ? `translateY(${ty.toFixed(1)}px)` : `translateY(calc(-50% + ${ty.toFixed(1)}px))`);
+    c.style.setProperty('--ty', (ty * .6).toFixed(1) + 'px'); c.style.transform = '';
     c.classList.toggle('on', op > .5);
   });
   const stepIdx = P < .08 ? -1 : P < .27 ? 0 : P < .57 ? 1 : P < .70 ? 2 : P < .83 ? 3 : 4;
-  rail.forEach((r, i) => r.classList.toggle('on', i === stepIdx));
-  hint.style.opacity = P < .02 ? 1 : 0;
+  rail.forEach((r, i) => { r.classList.toggle('on', i === stepIdx); r.classList.toggle('done', i < stepIdx); r.style.setProperty('--f', i === stepIdx ? seg(P, STEPS[i], STEPS[i + 1]).toFixed(3) : (i < stepIdx ? 1 : 0)); });
 }
 const litCache = {};
 function litMat(k, col = '#cfe3fb') { const key = col + Math.round(k * 12); return litCache[key] || (litCache[key] = new THREE.MeshStandardMaterial({color: col, roughness: .25, envMapIntensity: .7, emissive: '#ffd985', emissiveIntensity: k * .85})); }
@@ -1036,12 +1036,23 @@ function adapt(ms) {
   const next = avg > 22 ? Math.max(PR_MIN, PR - .15) : (avg < 13 ? Math.min(PR_MAX, PR + .1) : PR);
   if (Math.abs(next - PR) > .01) { PR = next; renderer.setPixelRatio(PR); resize(); }
 }
+/* Film : l'histoire se joue toute seule, en boucle, comme une vidéo. Pas de défilement.
+   Pause : bouton, ou clic sur un chapitre de la barre pour y sauter. */
+const FILM = 46, HOLD = 3.5, FADE = .7;
+let filmT = Q.has('t') ? parseFloat(Q.get('t')) : 0, playing = true;
+const stage = document.getElementById('stage'), playBtn = document.getElementById('film-play');
+function setPlaying(v) { playing = v; if (playBtn) { playBtn.classList.toggle('paused', !v); playBtn.setAttribute('aria-label', T(v ? 'film.pause' : 'film.play')); } }
+if (playBtn) playBtn.addEventListener('click', () => setPlaying(!playing));
+rail.forEach((r, i) => r.addEventListener('click', () => { filmT = (STEPS[i] + .004) * FILM; setPlaying(true); }));
+onLang(() => setPlaying(playing));
+function filmCut(t) { return Math.max(1 - clamp(t / FADE), clamp((t - (FILM + HOLD - FADE)) / FADE)); }
 function loop(now) {
   const ms = now - last, dt = Math.min(.05, ms / 1000); last = now;
-  const target = window.__target || 0;
-  P += (target - P) * (1 - Math.exp(-dt * 5.5));
-  if (Math.abs(target - P) < 1e-4) P = target;
-  if (onScreen && !document.hidden && !Q.has('freeze')) { draw(P, (now - T0) / 1000); if (frames > 10 && ms < 200) adapt(ms); }
+  const live = onScreen && !document.hidden;
+  if (live && playing && !Q.has('freeze')) { filmT += dt; if (filmT > FILM + HOLD) filmT = 0; }
+  P = clamp(filmT / FILM);
+  stage.style.setProperty('--cut', filmCut(filmT).toFixed(3));
+  if (live && !Q.has('freeze')) { draw(P, (now - T0) / 1000); if (frames > 10 && ms < 200) adapt(ms); }
   frames++; if (frames === 8) window.__ready = true;
   requestAnimationFrame(loop);
 }
@@ -1051,6 +1062,6 @@ function reveal() { root.classList.add('gl-on'); window.__revealAt = Math.round(
 function warm(i) {
   const steps = [0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1];
   if (i < steps.length && !STILL) { draw(steps[i], 1); requestAnimationFrame(() => warm(i + 1)); return; }
-  P = window.__target || 0; draw(P, 0); last = performance.now(); reveal(); requestAnimationFrame(loop);
+  P = clamp(filmT / FILM); draw(P, 0); last = performance.now(); reveal(); setPlaying(true); requestAnimationFrame(loop);
 }
 document.fonts.ready.then(() => warm(0));

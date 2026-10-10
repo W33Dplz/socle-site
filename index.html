@@ -17,17 +17,18 @@
 <script>
   /* L'animation suit le défilement (c'est le lecteur qui la pilote) : elle reste active même en mouvement réduit. Repli statique seulement sur ?static ou sans WebGL. */
   if (/[?&]static/.test(location.search)) document.documentElement.classList.add('reduced');
+  /* Les apparitions au défilement ne cachent rien sans IntersectionObserver. */
+  if ('IntersectionObserver' in window) document.documentElement.classList.add('anim');
 </script>
 </head>
 <body>
 <header class="top">
-  <a class="brand" href="#top"><i></i>Socle</a>
+  <a class="brand" href="#story"><i></i>Socle</a>
   <div class="right">
     <div class="lang" role="group" data-ia="aria-label=aria.lang"><button type="button" data-lang="en">EN</button><button type="button" data-lang="fr">FR</button></div>
     <nav class="main">
       <a href="#how" data-i="nav.how"></a>
       <a href="#cases" data-i="nav.cases"></a>
-      <a href="#offer" data-i="nav.offer"></a>
       <a href="#faq" data-i="nav.faq"></a>
       <a class="cta" href="mailto:info@getsocle.com" data-i="nav.contact"></a>
     </nav>
@@ -51,39 +52,38 @@
       </div>
     </div>
 
-    <div class="chap" data-a=".09" data-b=".26">
+    <div class="chap cap" data-a=".09" data-b=".26">
       <h2 data-i="c1.h"></h2>
       <p data-i="c1.p"></p>
     </div>
 
-    <div class="chap" data-a=".285" data-b=".565">
+    <div class="chap cap" data-a=".285" data-b=".565">
       <h2 data-i="c2.h"></h2>
       <p data-i="c2.p"></p>
     </div>
 
-    <div class="chap" data-a=".58" data-b=".70">
+    <div class="chap cap" data-a=".58" data-b=".70">
       <h2 data-i="c3.h"></h2>
       <p data-i="c3.p"></p>
     </div>
 
-    <div class="chap" data-a=".715" data-b=".825">
+    <div class="chap cap" data-a=".715" data-b=".825">
       <h2 data-i="c4.h"></h2>
     </div>
 
-    <div class="chap" data-a=".84" data-b=".93">
+    <div class="chap cap" data-a=".84" data-b=".93">
       <h2 data-i="c5.h"></h2>
     </div>
 
-    <div class="chap center" data-a=".965" data-b="1.01">
+    <div class="chap cap" data-a=".955" data-b="1.01">
       <h2 data-i="fin.h"></h2>
-      <div class="links">
-        <a class="btn primary" href="mailto:info@getsocle.com" data-i="fin.contact"></a>
-        <a class="btn" href="#how" data-i="fin.how"></a>
-      </div>
     </div>
 
-    <div class="rail" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-    <div class="scrollhint" id="hint" data-i="hint"></div>
+    <div class="film">
+      <button type="button" id="film-play" class="fplay" data-ia="aria-label=film.pause"><span></span></button>
+      <div class="rail" role="group" data-ia="aria-label=film.chapters"><i role="button" tabindex="0" data-ia="aria-label=film.c1"></i><i role="button" tabindex="0" data-ia="aria-label=film.c2"></i><i role="button" tabindex="0" data-ia="aria-label=film.c3"></i><i role="button" tabindex="0" data-ia="aria-label=film.c4"></i><i role="button" tabindex="0" data-ia="aria-label=film.c5"></i></div>
+    </div>
+    <span id="hint" hidden></span>
     <div class="note" data-i="note"></div>
   </div>
 </section>
@@ -96,442 +96,255 @@
 </div>
 
 <main class="rest">
-<div class="wrap wide">
 
-<section id="how" class="blk how">
-  <h2 class="sec" data-i="how.h"></h2>
-  <p class="biglead" data-i="how.lead"></p>
-  <p class="how-intro" data-i="how.intro"></p>
-  <div class="how3"><p style="--c:#E8A33D" data-i="how.p1"></p><p style="--c:#3FB27F" data-i="how.p2"></p><p style="--c:#4A8CF2" data-i="how.p3"></p></div>
-  <p class="how-note" data-i="how.p4"></p>
-  <div class="dgm">
-  <svg class="diagram" viewBox="0 0 640 360" role="img" aria-labelledby="dt dd" xmlns="http://www.w3.org/2000/svg">
-    <title id="dt" data-i="diag.title"></title>
-    <desc id="dd" data-i="diag.desc"></desc>
-    <defs>
-      <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="head"/></marker>
-    </defs>
-    <rect class="box" x="10" y="10" width="620" height="92" rx="12" fill="#f4f1ea"/>
-    <text class="t" x="28" y="38" data-i="diag.ws.t"></text>
-    <text class="s" x="28" y="62" data-i="diag.ws.s1"></text>
-    <text class="s" x="28" y="82" data-i="diag.ws.s2"></text>
-
-    <line class="arrow" x1="320" y1="104" x2="320" y2="128" marker-end="url(#ah)"/>
-
-    <rect class="box" x="10" y="130" width="620" height="102" rx="12" fill="#e9eefb" stroke="#2f4b9c"/>
-    <text class="t" x="28" y="158" data-i="diag.core.t"></text>
-    <text class="s" x="28" y="182" data-i="diag.core.s1"></text>
-    <text class="s" x="28" y="202" data-i="diag.core.s2"></text>
-    <text class="s" x="28" y="222" data-i="diag.core.s3"></text>
-
-    <line class="arrow" x1="320" y1="234" x2="320" y2="258" marker-end="url(#ah)"/>
-
-    <rect class="box" x="10" y="260" width="620" height="90" rx="12" fill="#f4f1ea"/>
-    <text class="t" x="28" y="288" data-i="diag.tools.t"></text>
-    <text class="s" x="28" y="312" data-i="diag.tools.s1"></text>
-    <text class="s" x="28" y="332" data-i="diag.tools.s2"></text>
-    <rect x="440" y="276" width="14" height="14" rx="4" fill="#E8A33D"/><rect x="460" y="276" width="14" height="14" rx="4" fill="#E0589F"/><rect x="480" y="276" width="14" height="14" rx="4" fill="#3FB27F"/><rect x="500" y="276" width="14" height="14" rx="4" fill="#4A8CF2"/><rect x="520" y="276" width="14" height="14" rx="4" fill="#8B6BEA"/><rect x="540" y="276" width="14" height="14" rx="4" fill="#F26D5B"/>
-  </svg>
-  </div>
-
-  <p class="lead" data-i="steps.lead"></p>
-  <ol class="steps">
-    <li style="--c:#E8A33D" data-i="step.1"></li>
-    <li style="--c:#3FB27F" data-i="step.2"></li>
-    <li style="--c:#4A8CF2" data-i="step.3"></li>
-    <li style="--c:#8B6BEA" data-i="step.4"></li>
-    <li style="--c:#F26D5B" data-i="step.5"></li>
-  </ol>
-  <p class="how-end" data-i="how.end"></p>
-</section>
-</div>
-
-<!-- MATIERE:START -->
-
-<section id="twin" class="bx">
+<section id="why" class="bx why tint">
   <div class="wrap wide">
-    <div class="sp"><div class="sp-l">
-    <span class="eyebrow" data-i="tw.k"></span>
-    <h2 class="sec" data-i="tw.h"></h2>
-    <p class="sub" data-i="tw.sub"></p>
-    </div>
-    <div class="tiles">
-<article class="tile" style="--c:#E8A33D"><span class="tn">01</span><h3 data-i="tw1.h"></h3><p data-i="tw1.p"></p></article>
-<article class="tile" style="--c:#E0589F"><span class="tn">02</span><h3 data-i="tw2.h"></h3><p data-i="tw2.p"></p></article>
-<article class="tile" style="--c:#3FB27F"><span class="tn">03</span><h3 data-i="tw3.h"></h3><p data-i="tw3.p"></p></article>
-<article class="tile" style="--c:#4A8CF2"><span class="tn">04</span><h3 data-i="tw4.h"></h3><p data-i="tw4.p"></p></article>
-<article class="tile" style="--c:#8B6BEA"><span class="tn">05</span><h3 data-i="tw5.h"></h3><p data-i="tw5.p"></p></article>
-<article class="tile" style="--c:#F26D5B"><span class="tn">06</span><h3 data-i="tw6.h"></h3><p data-i="tw6.p"></p></article>
-    </div></div>
-    <p class="facets-l" data-i="tw.in"></p>
-    <div class="facets">
-<div class="facet"><b data-i="tf1.h"></b><span data-i="tf1.p"></span></div>
-<div class="facet"><b data-i="tf2.h"></b><span data-i="tf2.p"></span></div>
-<div class="facet"><b data-i="tf3.h"></b><span data-i="tf3.p"></span></div>
-<div class="facet"><b data-i="tf4.h"></b><span data-i="tf4.p"></span></div>
-    </div>
-  </div>
-</section>
+    <h2 class="sec" data-split data-i="why.h"></h2>
+    <p class="sub rv" data-i="cmp.sub"></p>
 
-<section id="compare" class="bx tint">
-  <div class="wrap wide">
-    <span class="eyebrow" data-i="cmp.k"></span>
-    <h2 class="sec" data-i="cmp.h"></h2>
-    <p class="sub" data-i="cmp.sub"></p>
-    <div class="vs">
-      <div class="vs-row vs-head">
-        <div class="vs-l"></div>
-        <div class="vs-h side-a"><svg class="vsvg" viewBox="0 0 340 172" aria-hidden="true" focusable="false">
-  <g stroke="#b9bfcc" stroke-width="1.5" stroke-dasharray="4 4" fill="none"><path d="M170 46L45 132"/><path d="M170 46L95 132"/><path d="M170 46L145 132"/><path d="M170 46L195 132"/><path d="M170 46L245 132"/><path d="M170 46L295 132"/></g>
-  <circle cx="170" cy="28" r="19" fill="#1d2433"/>
-  <text class="vai" x="170" y="33" text-anchor="middle" data-i="cmp.svg.ai"></text>
-  <rect x="33" y="132" width="24" height="24" rx="7" fill="#E8A33D"/><rect x="83" y="132" width="24" height="24" rx="7" fill="#E0589F"/><rect x="133" y="132" width="24" height="24" rx="7" fill="#3FB27F"/><rect x="183" y="132" width="24" height="24" rx="7" fill="#4A8CF2"/><rect x="233" y="132" width="24" height="24" rx="7" fill="#8B6BEA"/><rect x="283" y="132" width="24" height="24" rx="7" fill="#F26D5B"/>
-</svg><h3 data-i="cmp.a.h"></h3><p class="vs-t" data-i="cmp.a.t"></p></div>
-        <div class="vs-h side-b"><svg class="vsvg" viewBox="0 0 340 172" aria-hidden="true" focusable="false">
-  <circle cx="170" cy="22" r="17" fill="#1d2433"/>
-  <text class="vai" x="170" y="27" text-anchor="middle" data-i="cmp.svg.ai"></text>
-  <path d="M170 39V60" stroke="#2f4b9c" stroke-width="2"/>
-  <rect x="85" y="60" width="170" height="44" rx="12" fill="#e9eefb" stroke="#2f4b9c" stroke-width="1.5"/>
-  <text class="vtw" x="170" y="87" text-anchor="middle" data-i="cmp.svg.twin"></text>
-  <circle cx="255" cy="60" r="9" fill="#2e9e68"/><path d="M250.5 60l3 3 5.5-6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M117.5 104L45 132" stroke="#E8A33D" stroke-width="2" fill="none"/><path d="M138.5 104L95 132" stroke="#E0589F" stroke-width="2" fill="none"/><path d="M159.5 104L145 132" stroke="#3FB27F" stroke-width="2" fill="none"/><path d="M180.5 104L195 132" stroke="#4A8CF2" stroke-width="2" fill="none"/><path d="M201.5 104L245 132" stroke="#8B6BEA" stroke-width="2" fill="none"/><path d="M222.5 104L295 132" stroke="#F26D5B" stroke-width="2" fill="none"/><rect x="33" y="132" width="24" height="24" rx="7" fill="#E8A33D"/><rect x="83" y="132" width="24" height="24" rx="7" fill="#E0589F"/><rect x="133" y="132" width="24" height="24" rx="7" fill="#3FB27F"/><rect x="183" y="132" width="24" height="24" rx="7" fill="#4A8CF2"/><rect x="233" y="132" width="24" height="24" rx="7" fill="#8B6BEA"/><rect x="283" y="132" width="24" height="24" rx="7" fill="#F26D5B"/>
-</svg><h3 data-i="cmp.b.h"></h3><p class="vs-t" data-i="cmp.b.t"></p></div>
-      </div>
-    <div class="vs-row">
-      <div class="vs-l" data-i="cmp.r1"></div>
-      <div class="vs-c side-a"><span class="who" data-i="cmp.a.s"></span><i class="mk" aria-hidden="true"></i><p data-i="cmp.r1a"></p></div>
-      <div class="vs-c side-b"><span class="who" data-i="cmp.b.s"></span><i class="mk" aria-hidden="true"></i><p data-i="cmp.r1b"></p></div>
-    </div>
-    <div class="vs-row">
-      <div class="vs-l" data-i="cmp.r2"></div>
-      <div class="vs-c side-a"><span class="who" data-i="cmp.a.s"></span><i class="mk" aria-hidden="true"></i><p data-i="cmp.r2a"></p></div>
-      <div class="vs-c side-b"><span class="who" data-i="cmp.b.s"></span><i class="mk" aria-hidden="true"></i><p data-i="cmp.r2b"></p></div>
-    </div>
-    <div class="vs-row">
-      <div class="vs-l" data-i="cmp.r3"></div>
-      <div class="vs-c side-a"><span class="who" data-i="cmp.a.s"></span><i class="mk" aria-hidden="true"></i><p data-i="cmp.r3a"></p></div>
-      <div class="vs-c side-b"><span class="who" data-i="cmp.b.s"></span><i class="mk" aria-hidden="true"></i><p data-i="cmp.r3b"></p></div>
-    </div>
-    <div class="vs-row">
-      <div class="vs-l" data-i="cmp.r4"></div>
-      <div class="vs-c side-a"><span class="who" data-i="cmp.a.s"></span><i class="mk" aria-hidden="true"></i><p data-i="cmp.r4a"></p></div>
-      <div class="vs-c side-b"><span class="who" data-i="cmp.b.s"></span><i class="mk" aria-hidden="true"></i><p data-i="cmp.r4b"></p></div>
-    </div>
-    <div class="vs-row">
-      <div class="vs-l" data-i="cmp.r5"></div>
-      <div class="vs-c side-a"><span class="who" data-i="cmp.a.s"></span><i class="mk" aria-hidden="true"></i><p data-i="cmp.r5a"></p></div>
-      <div class="vs-c side-b"><span class="who" data-i="cmp.b.s"></span><i class="mk" aria-hidden="true"></i><p data-i="cmp.r5b"></p></div>
-    </div>
-    <div class="vs-row end">
-      <div class="vs-l" data-i="cmp.r6"></div>
-      <div class="vs-c side-a"><span class="who" data-i="cmp.a.s"></span><i class="mk" aria-hidden="true"></i><p data-i="cmp.r6a"></p></div>
-      <div class="vs-c side-b"><span class="who" data-i="cmp.b.s"></span><i class="mk" aria-hidden="true"></i><p data-i="cmp.r6b"></p></div>
-    </div>
-    </div>
-    <ol class="jr"><li><b data-i="cmp.j1.h"></b><span data-i="cmp.j1.p"></span></li><li><b data-i="cmp.j2.h"></b><span data-i="cmp.j2.p"></span></li><li><b data-i="cmp.j3.h"></b><span data-i="cmp.j3.p"></span></li><li><b data-i="cmp.j4.h"></b><span data-i="cmp.j4.p"></span></li></ol>
-    <p class="pull" data-i="cmp.pull"></p>
-  </div>
-</section>
+    <div class="vs" id="vs">
+      <article class="vp vp-a" aria-labelledby="vpa-h">
+        <div class="vp-fig"><svg class="vsvg" viewBox="0 0 400 210" aria-hidden="true" focusable="false">
+          <g class="cls" fill="none" stroke="#aab1c2" stroke-width="1.7" stroke-dasharray="4 6" stroke-linecap="round">
+            <path class="cl" style="--k:0" d="M200 56C150 70 70 70 58 150"/>
+            <path class="cl" style="--k:1" d="M200 56C190 80 90 84 128 112"/>
+            <path class="cl" style="--k:2" d="M200 56C262 70 150 130 196 168"/>
+            <path class="cl" style="--k:3" d="M200 56C232 60 282 80 252 118"/>
+            <path class="cl" style="--k:4" d="M200 56C312 50 342 112 318 160"/>
+            <path class="cl" style="--k:5" d="M200 56C252 92 382 60 346 98"/>
+          </g>
+          <circle cx="200" cy="34" r="22" fill="#1d2433"/>
+          <text class="vai" x="200" y="39" text-anchor="middle" data-i="cmp.svg.ai"></text>
+          <rect class="tl" style="--r:-14deg;--k:0" x="44" y="136" width="28" height="28" rx="8" fill="#E8A33D"/>
+          <rect class="tl" style="--r:9deg;--k:1" x="114" y="98" width="28" height="28" rx="8" fill="#E0589F"/>
+          <rect class="tl" style="--r:-6deg;--k:2" x="182" y="154" width="28" height="28" rx="8" fill="#3FB27F"/>
+          <rect class="tl" style="--r:16deg;--k:3" x="238" y="104" width="28" height="28" rx="8" fill="#4A8CF2"/>
+          <rect class="tl" style="--r:-10deg;--k:4" x="304" y="146" width="28" height="28" rx="8" fill="#8B6BEA"/>
+          <rect class="tl" style="--r:12deg;--k:5" x="332" y="84" width="28" height="28" rx="8" fill="#F26D5B"/>
+        </svg></div>
+        <h3 id="vpa-h" data-i="cmp.a.h"></h3>
+        <p class="vp-t" data-i="cmp.a.t"></p>
+        <ul class="vp-l"><li style="--i:0" data-i="cmp.r1a"></li><li style="--i:1" data-i="cmp.r3a"></li><li style="--i:2" data-i="cmp.r5a"></li></ul>
+      </article>
 
-<section id="example" class="bx">
-  <div class="wrap wide">
-    <span class="eyebrow" data-i="ex.k"></span>
-    <h2 class="sec" data-i="ex.h"></h2>
-    <p class="sub" data-i="ex.sub"></p>
-    <div class="xtabs" role="tablist" aria-label="Examples"><button type="button" role="tab" id="ex1-t" aria-controls="ex1-p" aria-selected="true" tabindex="0" style="--c:#E8A33D" data-i="ex1.tab"></button><button type="button" role="tab" id="ex2-t" aria-controls="ex2-p" aria-selected="false" tabindex="-1" style="--c:#3FB27F" data-i="ex2.tab"></button><button type="button" role="tab" id="ex3-t" aria-controls="ex3-p" aria-selected="false" tabindex="-1" style="--c:#4A8CF2" data-i="ex3.tab"></button><button type="button" role="tab" id="ex4-t" aria-controls="ex4-p" aria-selected="false" tabindex="-1" style="--c:#F26D5B" data-i="ex4.tab"></button></div>
-    <div class="xpanels">
-      <div class="xpanel" role="tabpanel" id="ex1-p" aria-labelledby="ex1-t">
-        <div class="xtext">
-          <h3 class="xh"><span class="xdot" style="background:#c8483b"></span><span data-i="ex.problem"></span></h3>
-          <p data-i="ex1.p"></p>
-          <h3 class="xh"><span class="xdot" style="background:#2f4b9c"></span><span data-i="ex.with"></span></h3>
-          <p data-i="ex1.s"></p>
-          <h3 class="xh"><span class="xdot" style="background:#2e9e68"></span><span data-i="ex.flow"></span></h3>
-          <ol class="xflow"><li data-i="ex1.f1"></li><li data-i="ex1.f2"></li><li data-i="ex1.f3"></li></ol>
-        </div>
-        <div class="xside">
-          <div class="twin-card">
-            <div class="twin-h"><span class="twin-k" data-i="ex.card"></span><b data-i="ex1.c"></b></div>
-            <ul><li style="--c:#E0589F"><i></i><div><b data-i="tag.crm"></b><span data-i="ex1.l1"></span></div></li><li style="--c:#E8A33D"><i></i><div><b data-i="tag.erp"></b><span data-i="ex1.l2"></span></div></li><li style="--c:#F26D5B"><i></i><div><b data-i="tag.pt"></b><span data-i="ex1.l3"></span></div></li><li style="--c:#4A8CF2"><i></i><div><b data-i="tag.mail"></b><span data-i="ex1.l4"></span></div></li><li style="--c:#3FB27F"><i></i><div><b data-i="tag.tab"></b><span data-i="ex1.l5"></span></div></li><li style="--c:#8B6BEA"><i></i><div><b data-i="tag.doc"></b><span data-i="ex1.l6"></span></div></li></ul>
-          </div>
-          <div class="gov"><span class="gchip"><b data-i="gov.rule"></b><span data-i="ex1.g1"></span></span><span class="gchip"><b data-i="gov.who"></b><span data-i="ex1.g2"></span></span><span class="gchip"><b data-i="gov.proof"></b><span data-i="ex1.g3"></span></span><span class="gchip"><b data-i="gov.trace"></b><span data-i="ex1.g4"></span></span></div>
-        </div>
-      </div>
-      <div class="xpanel" role="tabpanel" id="ex2-p" aria-labelledby="ex2-t">
-        <div class="xtext">
-          <h3 class="xh"><span class="xdot" style="background:#c8483b"></span><span data-i="ex.problem"></span></h3>
-          <p data-i="ex2.p"></p>
-          <h3 class="xh"><span class="xdot" style="background:#2f4b9c"></span><span data-i="ex.with"></span></h3>
-          <p data-i="ex2.s"></p>
-          <h3 class="xh"><span class="xdot" style="background:#2e9e68"></span><span data-i="ex.flow"></span></h3>
-          <ol class="xflow"><li data-i="ex2.f1"></li><li data-i="ex2.f2"></li><li data-i="ex2.f3"></li></ol>
-        </div>
-        <div class="xside">
-          <div class="twin-card">
-            <div class="twin-h"><span class="twin-k" data-i="ex.card"></span><b data-i="ex2.c"></b></div>
-            <ul><li style="--c:#4A8CF2"><i></i><div><b data-i="tag.mail"></b><span data-i="ex2.l1"></span></div></li><li style="--c:#8B6BEA"><i></i><div><b data-i="tag.doc"></b><span data-i="ex2.l2"></span></div></li><li style="--c:#3FB27F"><i></i><div><b data-i="tag.tab"></b><span data-i="ex2.l3"></span></div></li><li style="--c:#E8A33D"><i></i><div><b data-i="tag.erp"></b><span data-i="ex2.l4"></span></div></li><li style="--c:#F26D5B"><i></i><div><b data-i="tag.pt"></b><span data-i="ex2.l5"></span></div></li></ul>
-          </div>
-          <div class="gov"><span class="gchip"><b data-i="gov.rule"></b><span data-i="ex2.g1"></span></span><span class="gchip"><b data-i="gov.who"></b><span data-i="ex2.g2"></span></span><span class="gchip"><b data-i="gov.proof"></b><span data-i="ex2.g3"></span></span><span class="gchip"><b data-i="gov.trace"></b><span data-i="ex2.g4"></span></span></div>
-        </div>
-      </div>
-      <div class="xpanel" role="tabpanel" id="ex3-p" aria-labelledby="ex3-t">
-        <div class="xtext">
-          <h3 class="xh"><span class="xdot" style="background:#c8483b"></span><span data-i="ex.problem"></span></h3>
-          <p data-i="ex3.p"></p>
-          <h3 class="xh"><span class="xdot" style="background:#2f4b9c"></span><span data-i="ex.with"></span></h3>
-          <p data-i="ex3.s"></p>
-          <h3 class="xh"><span class="xdot" style="background:#2e9e68"></span><span data-i="ex.flow"></span></h3>
-          <ol class="xflow"><li data-i="ex3.f1"></li><li data-i="ex3.f2"></li><li data-i="ex3.f3"></li></ol>
-        </div>
-        <div class="xside">
-          <div class="twin-card">
-            <div class="twin-h"><span class="twin-k" data-i="ex.card"></span><b data-i="ex3.c"></b></div>
-            <ul><li style="--c:#3FB27F"><i></i><div><b data-i="tag.tab"></b><span data-i="ex3.l1"></span></div></li><li style="--c:#E8A33D"><i></i><div><b data-i="tag.erp"></b><span data-i="ex3.l2"></span></div></li><li style="--c:#E0589F"><i></i><div><b data-i="tag.crm"></b><span data-i="ex3.l3"></span></div></li><li style="--c:#4A8CF2"><i></i><div><b data-i="tag.mail"></b><span data-i="ex3.l4"></span></div></li><li style="--c:#F26D5B"><i></i><div><b data-i="tag.pt"></b><span data-i="ex3.l5"></span></div></li></ul>
-          </div>
-          <div class="gov"><span class="gchip"><b data-i="gov.rule"></b><span data-i="ex3.g1"></span></span><span class="gchip"><b data-i="gov.who"></b><span data-i="ex3.g2"></span></span><span class="gchip"><b data-i="gov.proof"></b><span data-i="ex3.g3"></span></span><span class="gchip"><b data-i="gov.trace"></b><span data-i="ex3.g4"></span></span></div>
-        </div>
-      </div>
-      <div class="xpanel" role="tabpanel" id="ex4-p" aria-labelledby="ex4-t">
-        <div class="xtext">
-          <h3 class="xh"><span class="xdot" style="background:#c8483b"></span><span data-i="ex.problem"></span></h3>
-          <p data-i="ex4.p"></p>
-          <h3 class="xh"><span class="xdot" style="background:#2f4b9c"></span><span data-i="ex.with"></span></h3>
-          <p data-i="ex4.s"></p>
-          <h3 class="xh"><span class="xdot" style="background:#2e9e68"></span><span data-i="ex.flow"></span></h3>
-          <ol class="xflow"><li data-i="ex4.f1"></li><li data-i="ex4.f2"></li><li data-i="ex4.f3"></li></ol>
-        </div>
-        <div class="xside">
-          <div class="twin-card">
-            <div class="twin-h"><span class="twin-k" data-i="ex.card"></span><b data-i="ex4.c"></b></div>
-            <ul><li style="--c:#E8A33D"><i></i><div><b data-i="tag.erp"></b><span data-i="ex4.l1"></span></div></li><li style="--c:#3FB27F"><i></i><div><b data-i="tag.tab"></b><span data-i="ex4.l2"></span></div></li><li style="--c:#F26D5B"><i></i><div><b data-i="tag.pt"></b><span data-i="ex4.l3"></span></div></li><li style="--c:#4A8CF2"><i></i><div><b data-i="tag.mail"></b><span data-i="ex4.l4"></span></div></li><li style="--c:#8B6BEA"><i></i><div><b data-i="tag.doc"></b><span data-i="ex4.l5"></span></div></li></ul>
-          </div>
-          <div class="gov"><span class="gchip"><b data-i="gov.rule"></b><span data-i="ex4.g1"></span></span><span class="gchip"><b data-i="gov.who"></b><span data-i="ex4.g2"></span></span><span class="gchip"><b data-i="gov.proof"></b><span data-i="ex4.g3"></span></span><span class="gchip"><b data-i="gov.trace"></b><span data-i="ex4.g4"></span></span></div>
-        </div>
-      </div>
-    </div>
-    <p class="xnote" data-i="ex.note"></p>
-    <script>(function(){var t=document.querySelectorAll("#example [role=tab]");if(!t.length)return;function sel(b){t.forEach(function(x){var on=x===b;x.setAttribute("aria-selected",on?"true":"false");x.tabIndex=on?0:-1;var p=document.getElementById(x.getAttribute("aria-controls"));if(p)p.hidden=!on;});}t.forEach(function(b,i){b.addEventListener("click",function(){sel(b)});b.addEventListener("keydown",function(e){var n=e.key==="ArrowRight"?i+1:e.key==="ArrowLeft"?i-1:-1;if(n>=0){n=(n+t.length)%t.length;t[n].focus();sel(t[n]);e.preventDefault();}});});sel(t[0]);})();</script>
-  </div>
-</section>
-
-<section id="workspace" class="bx tint">
-  <div class="wrap wide">
-    <span class="eyebrow" data-i="ws.k"></span>
-    <h2 class="sec" data-i="ws.h"></h2>
-    <p class="sub" data-i="ws.sub"></p>
-    <div class="ws">
-      <div class="chat">
-        <div class="chat-bar"><i></i><i></i><i></i><span data-i="ws.bar"></span></div>
-        <div class="msg me"><p data-i="ws.q"></p></div>
-        <div class="msg ai">
-          <p data-i="ws.a"></p>
-          <ul class="rows" aria-hidden="true">
-            <li><i class="bar b1"></i><i class="bar b2"></i><i class="bar b3"></i></li>
-            <li><i class="bar b1"></i><i class="bar b2"></i><i class="bar b3"></i></li>
-          </ul>
-          <p class="srcl"><span data-i="ws.srcl"></span><span style="--c:#E8A33D" data-i="tag.erp"></span><span style="--c:#F26D5B" data-i="tag.pt"></span><span style="--c:#4A8CF2" data-i="tag.mail"></span></p>
-          <div class="prop">
-            <p data-i="ws.prop"></p>
-            <div class="btns"><span class="bt ok" data-i="approve"></span><span class="bt" data-i="ws.edit"></span></div>
-          </div>
-        </div>
-        <p class="chat-cap" data-i="note"></p>
-      </div>
-      <ol class="wpoints"><li style="--c:#E8A33D"><b data-i="w1.h"></b><span data-i="w1.p"></span></li><li style="--c:#3FB27F"><b data-i="w2.h"></b><span data-i="w2.p"></span></li><li style="--c:#8B6BEA"><b data-i="w3.h"></b><span data-i="w3.p"></span></li></ol>
-    </div>
-  </div>
-</section>
-
-<section id="cases" class="bx">
-  <div class="wrap wide">
-    <span class="eyebrow" data-i="uc.k"></span>
-    <h2 class="sec" data-i="uc.h"></h2>
-    <p class="sub" data-i="uc.sub"></p>
-    <div class="ucs">
-      <article class="uc" style="--c:#E8A33D">
-        <header><span class="uc-l">A</span><div><h3 data-i="uc1.h"></h3><span class="uc-s" data-i="uc1.s"></span></div></header>
-        <dl>
-          <div class="r-p"><dt data-i="uc.p"></dt><dd data-i="uc1.p"></dd></div>
-          <div class="r-a"><dt data-i="uc.a"></dt><dd data-i="uc1.a"></dd></div>
-          <div class="r-v"><dt data-i="uc.v"></dt><dd data-i="uc1.v"></dd></div>
-        </dl>
-        <div class="uc-src"><em data-i="uc.src"></em><span style="--c:#E8A33D" data-i="tag.erp"></span><span style="--c:#3FB27F" data-i="tag.tab"></span><span style="--c:#F26D5B" data-i="tag.pt"></span></div>
-      </article>
-      <article class="uc" style="--c:#3FB27F">
-        <header><span class="uc-l">B</span><div><h3 data-i="uc2.h"></h3><span class="uc-s" data-i="uc2.s"></span></div></header>
-        <dl>
-          <div class="r-p"><dt data-i="uc.p"></dt><dd data-i="uc2.p"></dd></div>
-          <div class="r-a"><dt data-i="uc.a"></dt><dd data-i="uc2.a"></dd></div>
-          <div class="r-v"><dt data-i="uc.v"></dt><dd data-i="uc2.v"></dd></div>
-        </dl>
-        <div class="uc-src"><em data-i="uc.src"></em><span style="--c:#4A8CF2" data-i="tag.mail"></span><span style="--c:#8B6BEA" data-i="tag.doc"></span><span style="--c:#3FB27F" data-i="tag.tab"></span></div>
-      </article>
-      <article class="uc" style="--c:#4A8CF2">
-        <header><span class="uc-l">C</span><div><h3 data-i="uc3.h"></h3><span class="uc-s" data-i="uc3.s"></span></div></header>
-        <dl>
-          <div class="r-p"><dt data-i="uc.p"></dt><dd data-i="uc3.p"></dd></div>
-          <div class="r-a"><dt data-i="uc.a"></dt><dd data-i="uc3.a"></dd></div>
-          <div class="r-v"><dt data-i="uc.v"></dt><dd data-i="uc3.v"></dd></div>
-        </dl>
-        <div class="uc-src"><em data-i="uc.src"></em><span style="--c:#E8A33D" data-i="tag.erp"></span><span style="--c:#3FB27F" data-i="tag.tab"></span><span style="--c:#4A8CF2" data-i="tag.mail"></span></div>
-      </article>
-      <article class="uc" style="--c:#E0589F">
-        <header><span class="uc-l">D</span><div><h3 data-i="uc4.h"></h3><span class="uc-s" data-i="uc4.s"></span></div></header>
-        <dl>
-          <div class="r-p"><dt data-i="uc.p"></dt><dd data-i="uc4.p"></dd></div>
-          <div class="r-a"><dt data-i="uc.a"></dt><dd data-i="uc4.a"></dd></div>
-          <div class="r-v"><dt data-i="uc.v"></dt><dd data-i="uc4.v"></dd></div>
-        </dl>
-        <div class="uc-src"><em data-i="uc.src"></em><span style="--c:#F26D5B" data-i="tag.pt"></span><span style="--c:#E0589F" data-i="tag.crm"></span><span style="--c:#E8A33D" data-i="tag.erp"></span></div>
-      </article>
-      <article class="uc" style="--c:#8B6BEA">
-        <header><span class="uc-l">E</span><div><h3 data-i="uc5.h"></h3><span class="uc-s" data-i="uc5.s"></span></div></header>
-        <dl>
-          <div class="r-p"><dt data-i="uc.p"></dt><dd data-i="uc5.p"></dd></div>
-          <div class="r-a"><dt data-i="uc.a"></dt><dd data-i="uc5.a"></dd></div>
-          <div class="r-v"><dt data-i="uc.v"></dt><dd data-i="uc5.v"></dd></div>
-        </dl>
-        <div class="uc-src"><em data-i="uc.src"></em><span style="--c:#3FB27F" data-i="tag.tab"></span><span style="--c:#E8A33D" data-i="tag.erp"></span><span style="--c:#4A8CF2" data-i="tag.mail"></span></div>
-      </article>
-      <article class="uc" style="--c:#F26D5B">
-        <header><span class="uc-l">F</span><div><h3 data-i="uc6.h"></h3><span class="uc-s" data-i="uc6.s"></span></div></header>
-        <dl>
-          <div class="r-p"><dt data-i="uc.p"></dt><dd data-i="uc6.p"></dd></div>
-          <div class="r-a"><dt data-i="uc.a"></dt><dd data-i="uc6.a"></dd></div>
-          <div class="r-v"><dt data-i="uc.v"></dt><dd data-i="uc6.v"></dd></div>
-        </dl>
-        <div class="uc-src"><em data-i="uc.src"></em><span style="--c:#3FB27F" data-i="tag.tab"></span><span style="--c:#E8A33D" data-i="tag.erp"></span><span style="--c:#F26D5B" data-i="tag.pt"></span></div>
+      <article class="vp vp-b" aria-labelledby="vpb-h">
+        <div class="vp-fig"><svg class="vsvg" viewBox="0 0 400 210" aria-hidden="true" focusable="false">
+          <circle class="aib" cx="200" cy="28" r="20" fill="#1d2433"/>
+          <text class="vai" x="200" y="33" text-anchor="middle" data-i="cmp.svg.ai"></text>
+          <path class="dl up" pathLength="1" d="M200 48V66" stroke="#2f4b9c" stroke-width="2" fill="none"/>
+          <g class="twb"><rect x="118" y="66" width="164" height="42" rx="13" fill="#e9eefb" stroke="#2f4b9c" stroke-width="1.6"/>
+          <text class="vtw" x="200" y="92" text-anchor="middle" data-i="cmp.svg.twin"></text></g>
+          <g fill="none" stroke-width="2" stroke-linecap="round">
+            <path class="dl" style="--k:0" pathLength="1" stroke="#E8A33D" d="M145 108C145 134 70 128 70 154"/>
+            <path class="dl" style="--k:1" pathLength="1" stroke="#E0589F" d="M167 108C167 134 122 128 122 154"/>
+            <path class="dl" style="--k:2" pathLength="1" stroke="#3FB27F" d="M189 108C189 134 174 128 174 154"/>
+            <path class="dl" style="--k:3" pathLength="1" stroke="#4A8CF2" d="M211 108C211 134 226 128 226 154"/>
+            <path class="dl" style="--k:4" pathLength="1" stroke="#8B6BEA" d="M233 108C233 134 278 128 278 154"/>
+            <path class="dl" style="--k:5" pathLength="1" stroke="#F26D5B" d="M255 108C255 134 330 128 330 154"/>
+          </g>
+          <rect class="tr" style="--dx:-12px;--dy:-18px;--r:-14deg;--k:0" x="56" y="154" width="28" height="28" rx="8" fill="#E8A33D"/>
+          <rect class="tr" style="--dx:6px;--dy:-56px;--r:9deg;--k:1" x="108" y="154" width="28" height="28" rx="8" fill="#E0589F"/>
+          <rect class="tr" style="--dx:22px;--dy:0px;--r:-6deg;--k:2" x="160" y="154" width="28" height="28" rx="8" fill="#3FB27F"/>
+          <rect class="tr" style="--dx:26px;--dy:-50px;--r:16deg;--k:3" x="212" y="154" width="28" height="28" rx="8" fill="#4A8CF2"/>
+          <rect class="tr" style="--dx:40px;--dy:-8px;--r:-10deg;--k:4" x="264" y="154" width="28" height="28" rx="8" fill="#8B6BEA"/>
+          <rect class="tr" style="--dx:16px;--dy:-70px;--r:12deg;--k:5" x="316" y="154" width="28" height="28" rx="8" fill="#F26D5B"/>
+          <g class="okb"><circle cx="282" cy="66" r="11" fill="#2e9e68"/><path class="dl" pathLength="1" d="M277 66l3.6 3.6 6.6-7.4" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+        </svg></div>
+        <h3 id="vpb-h" data-i="cmp.b.h"></h3>
+        <p class="vp-t" data-i="cmp.b.t"></p>
+        <ul class="vp-l"><li style="--i:0" data-i="cmp.r1b"></li><li style="--i:1" data-i="cmp.r3b"></li><li style="--i:2" data-i="cmp.r5b"></li></ul>
       </article>
     </div>
-    <h3 class="sub-h" data-i="ol.h"></h3>
-    <ul class="ol"><li style="--c:#E8A33D"><b data-i="ol1.s"></b><span data-i="ol1.t"></span></li><li style="--c:#E0589F"><b data-i="ol2.s"></b><span data-i="ol2.t"></span></li><li style="--c:#3FB27F"><b data-i="ol3.s"></b><span data-i="ol3.t"></span></li><li style="--c:#4A8CF2"><b data-i="ol4.s"></b><span data-i="ol4.t"></span></li><li style="--c:#8B6BEA"><b data-i="ol5.s"></b><span data-i="ol5.t"></span></li><li style="--c:#F26D5B"><b data-i="ol6.s"></b><span data-i="ol6.t"></span></li><li style="--c:#E8A33D"><b data-i="ol7.s"></b><span data-i="ol7.t"></span></li><li style="--c:#E0589F"><b data-i="ol8.s"></b><span data-i="ol8.t"></span></li><li style="--c:#3FB27F"><b data-i="ol9.s"></b><span data-i="ol9.t"></span></li><li style="--c:#4A8CF2"><b data-i="ol10.s"></b><span data-i="ol10.t"></span></li><li style="--c:#8B6BEA"><b data-i="ol11.s"></b><span data-i="ol11.t"></span></li><li style="--c:#F26D5B"><b data-i="ol12.s"></b><span data-i="ol12.t"></span></li></ul>
+
+    <p class="pull" data-split data-i="cmp.pull"></p>
   </div>
 </section>
 
-<section id="roles" class="bx tint">
+<section id="how" class="bx how">
   <div class="wrap wide">
-    <span class="eyebrow" data-i="ro.k"></span>
-    <h2 class="sec" data-i="ro.h"></h2>
-    <p class="sub" data-i="ro.sub"></p>
-    <div class="roles"><article class="role" style="--c:#E8A33D"><h3 data-i="ro1.h"></h3><p class="rg"><b data-i="ro.gets"></b><span data-i="ro1.g"></span></p><p class="ra"><b data-i="ro.asks"></b><span data-i="ro1.a"></span></p></article><article class="role" style="--c:#3FB27F"><h3 data-i="ro2.h"></h3><p class="rg"><b data-i="ro.gets"></b><span data-i="ro2.g"></span></p><p class="ra"><b data-i="ro.asks"></b><span data-i="ro2.a"></span></p></article><article class="role" style="--c:#4A8CF2"><h3 data-i="ro3.h"></h3><p class="rg"><b data-i="ro.gets"></b><span data-i="ro3.g"></span></p><p class="ra"><b data-i="ro.asks"></b><span data-i="ro3.a"></span></p></article><article class="role" style="--c:#8B6BEA"><h3 data-i="ro4.h"></h3><p class="rg"><b data-i="ro.gets"></b><span data-i="ro4.g"></span></p><p class="ra"><b data-i="ro.asks"></b><span data-i="ro4.a"></span></p></article></div>
+    <h2 class="sec" data-split data-i="how.h"></h2>
+    <p class="sub rv" data-i="how.sub"></p>
+    <ol class="steps3">
+      <li class="s3" style="--c:#E8A33D;--i:0">
+        <div class="s3-fig"><svg class="il il1" viewBox="0 0 320 220" aria-hidden="true" focusable="false">
+          <g fill="none" stroke-linecap="round" opacity=".45">
+            <path class="ln" style="--k:0" pathLength="1" stroke="#E8A33D" stroke-width="2" d="M45 58V154"/>
+            <path class="ln" style="--k:1" pathLength="1" stroke="#E0589F" stroke-width="2" d="M91 58V154"/>
+            <path class="ln" style="--k:2" pathLength="1" stroke="#3FB27F" stroke-width="2" d="M137 58V154"/>
+            <path class="ln" style="--k:3" pathLength="1" stroke="#4A8CF2" stroke-width="2" d="M183 58V154"/>
+            <path class="ln" style="--k:4" pathLength="1" stroke="#8B6BEA" stroke-width="2" d="M229 58V154"/>
+            <path class="ln" style="--k:5" pathLength="1" stroke="#F26D5B" stroke-width="2" d="M275 58V154"/>
+          </g>
+          <g class="flow" fill="none" stroke-linecap="round" stroke-width="2.6" stroke-dasharray="2 10">
+              <path stroke="#E8A33D" d="M45 62V150"/><path stroke="#E0589F" d="M91 62V150"/><path stroke="#3FB27F" d="M137 62V150"/><path stroke="#4A8CF2" d="M183 62V150"/><path stroke="#8B6BEA" d="M229 62V150"/><path stroke="#F26D5B" d="M275 62V150"/>
+          </g>
+          <rect class="tl" style="--k:0" x="31" y="30" width="28" height="28" rx="8" fill="#E8A33D"/>
+          <rect class="tl" style="--k:1" x="77" y="30" width="28" height="28" rx="8" fill="#E0589F"/>
+          <rect class="tl" style="--k:2" x="123" y="30" width="28" height="28" rx="8" fill="#3FB27F"/>
+          <rect class="tl" style="--k:3" x="169" y="30" width="28" height="28" rx="8" fill="#4A8CF2"/>
+          <rect class="tl" style="--k:4" x="215" y="30" width="28" height="28" rx="8" fill="#8B6BEA"/>
+          <rect class="tl" style="--k:5" x="261" y="30" width="28" height="28" rx="8" fill="#F26D5B"/>
+          <g class="slab"><rect x="22" y="154" width="276" height="42" rx="13" fill="#2f4b9c"/><rect x="22" y="154" width="276" height="15" rx="13" fill="#fff" opacity=".14"/><text class="wm" x="160" y="182" text-anchor="middle">Socle</text></g>
+          <g class="nds" stroke-width="2.4">
+            <circle style="--k:0" cx="45" cy="154" r="5" fill="#fff" stroke="#E8A33D"/><circle style="--k:1" cx="91" cy="154" r="5" fill="#fff" stroke="#E0589F"/><circle style="--k:2" cx="137" cy="154" r="5" fill="#fff" stroke="#3FB27F"/><circle style="--k:3" cx="183" cy="154" r="5" fill="#fff" stroke="#4A8CF2"/><circle style="--k:4" cx="229" cy="154" r="5" fill="#fff" stroke="#8B6BEA"/><circle style="--k:5" cx="275" cy="154" r="5" fill="#fff" stroke="#F26D5B"/>
+          </g>
+        </svg></div>
+        <div class="s3-row"><span class="s3-n">1</span></div>
+        <h3 data-i="s1.h"></h3>
+        <p data-i="s1.p"></p>
+      </li>
+
+      <li class="s3" style="--c:#3FB27F;--i:1">
+        <div class="s3-fig"><svg class="il il2" viewBox="0 0 320 220" aria-hidden="true" focusable="false">
+          <circle cx="160" cy="112" r="58" fill="none" stroke="#2f4b9c" stroke-opacity=".18" stroke-dasharray="3 6"/>
+          <g fill="none" stroke-width="2" stroke-linecap="round" opacity=".7">
+            <path class="ln" style="--k:0" pathLength="1" stroke="#E8A33D" d="M160 112L160 57"/>
+            <path class="ln" style="--k:1" pathLength="1" stroke="#E0589F" d="M160 112L222 82"/>
+            <path class="ln" style="--k:2" pathLength="1" stroke="#3FB27F" d="M160 112L222 142"/>
+            <path class="ln" style="--k:3" pathLength="1" stroke="#4A8CF2" d="M160 112L160 167"/>
+            <path class="ln" style="--k:4" pathLength="1" stroke="#8B6BEA" d="M160 112L98 142"/>
+            <path class="ln" style="--k:5" pathLength="1" stroke="#F26D5B" d="M160 112L98 82"/>
+          </g>
+          <g class="nd">
+            <rect style="--k:0" x="145" y="27" width="30" height="30" rx="9" fill="#E8A33D"/>
+            <rect style="--k:1" x="221" y="62" width="30" height="30" rx="9" fill="#E0589F"/>
+            <rect style="--k:2" x="221" y="132" width="30" height="30" rx="9" fill="#3FB27F"/>
+            <rect style="--k:3" x="145" y="167" width="30" height="30" rx="9" fill="#4A8CF2"/>
+            <rect style="--k:4" x="69" y="132" width="30" height="30" rx="9" fill="#8B6BEA"/>
+            <rect style="--k:5" x="69" y="62" width="30" height="30" rx="9" fill="#F26D5B"/>
+          </g>
+          <circle class="pulse" cx="160" cy="112" r="26" fill="none" stroke="#2f4b9c" stroke-width="2"/>
+          <g class="core"><circle cx="160" cy="112" r="26" fill="#e9eefb" stroke="#2f4b9c" stroke-width="2"/><circle cx="160" cy="112" r="9" fill="#2f4b9c"/></g>
+          <g class="okb"><circle cx="190" cy="86" r="12" fill="#2e9e68"/><path class="dl" pathLength="1" d="M184.2 86.2l4.2 4.2 7.6-8.4" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+        </svg></div>
+        <div class="s3-row"><span class="s3-n">2</span></div>
+        <h3 data-i="s2.h"></h3>
+        <p data-i="s2.p"></p>
+      </li>
+
+      <li class="s3" style="--c:#4A8CF2;--i:2">
+        <div class="s3-fig"><svg class="il il3" viewBox="0 0 320 220" aria-hidden="true" focusable="false">
+          <g class="twchip"><rect x="94" y="14" width="132" height="32" rx="11" fill="#e9eefb" stroke="#2f4b9c" stroke-width="1.5"/><text class="vtw" x="160" y="34" text-anchor="middle" data-i="cmp.svg.twin"></text></g>
+          <g fill="none" stroke="#2f4b9c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".5">
+            <path class="ln" style="--k:0" pathLength="1" d="M160 46V62H62V76"/>
+            <path class="ln" style="--k:1" pathLength="1" d="M160 46V76"/>
+            <path class="ln" style="--k:2" pathLength="1" d="M160 46V62H258V76"/>
+          </g>
+          <g class="bot" style="--k:0"><line x1="62" y1="92" x2="62" y2="82" stroke="#4A8CF2" stroke-width="2"/><circle cx="62" cy="79" r="3.4" fill="#4A8CF2"/><rect x="40" y="92" width="44" height="34" rx="11" fill="#4A8CF2"/><circle class="eo" cx="54" cy="108" r="3.8"/><circle class="eye" cx="54" cy="108" r="3.8"/><circle class="eo" cx="70" cy="108" r="3.8"/><circle class="eye" cx="70" cy="108" r="3.8"/></g>
+          <g class="bot" style="--k:1"><line x1="160" y1="92" x2="160" y2="82" stroke="#3FB27F" stroke-width="2"/><circle cx="160" cy="79" r="3.4" fill="#3FB27F"/><rect x="138" y="92" width="44" height="34" rx="11" fill="#3FB27F"/><circle class="eo" cx="152" cy="108" r="3.8"/><circle class="eye" cx="152" cy="108" r="3.8"/><circle class="eo" cx="168" cy="108" r="3.8"/><circle class="eye" cx="168" cy="108" r="3.8"/></g>
+          <g class="bot" style="--k:2"><line x1="258" y1="92" x2="258" y2="82" stroke="#8B6BEA" stroke-width="2"/><circle cx="258" cy="79" r="3.4" fill="#8B6BEA"/><rect x="236" y="92" width="44" height="34" rx="11" fill="#8B6BEA"/><circle class="eo" cx="250" cy="108" r="3.8"/><circle class="eye" cx="250" cy="108" r="3.8"/><circle class="eo" cx="266" cy="108" r="3.8"/><circle class="eye" cx="266" cy="108" r="3.8"/></g>
+          <g opacity=".5"><path class="dl l2" pathLength="1" d="M160 130V166" fill="none" stroke="#1d2433" stroke-width="2" stroke-linecap="round"/></g>
+          <g class="apill"><rect x="100" y="168" width="120" height="36" rx="18" fill="#1d2433"/><text class="apt" x="160" y="191" text-anchor="middle" data-i="approve"></text></g>
+          <g class="okb"><circle cx="222" cy="168" r="13" fill="#2e9e68"/><path class="dl" pathLength="1" d="M216 168.4l4.6 4.6 8-9" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+        </svg></div>
+        <div class="s3-row"><span class="s3-n">3</span></div>
+        <h3 data-i="s3.h"></h3>
+        <p data-i="s3.p"></p>
+      </li>
+    </ol>
   </div>
 </section>
 
-<section id="platform" class="bx">
+<section id="cases" class="bx cases tint">
   <div class="wrap wide">
-    <span class="eyebrow" data-i="pm.k"></span>
-    <h2 class="sec" data-i="pm.h"></h2>
-    <p class="sub" data-i="pm.sub"></p>
-    <div class="mods"><article class="mod" style="--c:#E8A33D"><span class="mn">01</span><span class="mi"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6M15 2v6M7 8h10v4a5 5 0 0 1-10 0z"/><path d="M12 17v5"/></svg></span><h3 data-i="pm1.h"></h3><p data-i="pm1.p"></p></article><article class="mod" style="--c:#2f4b9c"><span class="mn">02</span><span class="mi"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 9h6M9 12h6M9 15h3"/></svg></span><h3 data-i="pm2.h"></h3><p data-i="pm2.p"></p></article><article class="mod" style="--c:#3FB27F"><span class="mn">03</span><span class="mi"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg></span><h3 data-i="pm3.h"></h3><p data-i="pm3.p"></p></article><article class="mod" style="--c:#8B6BEA"><span class="mn">04</span><span class="mi"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span><h3 data-i="pm4.h"></h3><p data-i="pm4.p"></p></article></div>
-    <p class="open"><span class="open-i"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6M15 2v6M7 8h10v4a5 5 0 0 1-10 0z"/><path d="M12 17v5"/></svg></span><span data-i="pm.open"></span></p>
-    <h3 class="sub-h" data-i="pl.h"></h3>
-    <ol class="layers"><li style="--c:#E8A33D"><span class="ln">1</span><b data-i="pl1.h"></b><div class="lc"><span data-i="pl1.c1"></span><span data-i="pl1.c2"></span><span data-i="pl1.c3"></span></div></li><li style="--c:#3FB27F"><span class="ln">2</span><b data-i="pl2.h"></b><div class="lc"><span data-i="pl2.c1"></span><span data-i="pl2.c2"></span><span data-i="pl2.c3"></span></div></li><li style="--c:#4A8CF2"><span class="ln">3</span><b data-i="pl3.h"></b><div class="lc"><span data-i="pl3.c1"></span><span data-i="pl3.c2"></span><span data-i="pl3.c3"></span></div></li><li style="--c:#2f4b9c"><span class="ln">4</span><b data-i="pl4.h"></b><div class="lc"><span data-i="pl4.c1"></span><span data-i="pl4.c2"></span><span data-i="pl4.c3"></span><span data-i="pl4.c4"></span></div></li><li style="--c:#8B6BEA"><span class="ln">5</span><b data-i="pl5.h"></b><div class="lc"><span data-i="pl5.c1"></span><span data-i="pl5.c2"></span></div></li><li style="--c:#F26D5B"><span class="ln">6</span><b data-i="pl6.h"></b><div class="lc"><span data-i="pl6.c1"></span><span data-i="pl6.c2"></span><span data-i="pl6.c3"></span></div></li></ol>
-    <p class="layers-n" data-i="pl.n"></p>
+    <h2 class="sec" data-split data-i="cases.h"></h2>
+    <p class="sub rv" data-i="cases.sub"></p>
+    <div class="cs" id="cs">
+      <div class="cs-bar">
+        <i class="cs-ind" aria-hidden="true"></i>
+        <div class="cs-tabs" role="tablist" data-ia="aria-label=cases.tabs">
+          <button type="button" class="cs-tab" role="tab" id="cs1-t" aria-controls="cs1-p" aria-selected="true" tabindex="0" style="--c:#E8A33D"><i class="dot" aria-hidden="true"></i><span data-i="uc1.h"></span></button>
+          <button type="button" class="cs-tab" role="tab" id="cs2-t" aria-controls="cs2-p" aria-selected="false" tabindex="-1" style="--c:#3FB27F"><i class="dot" aria-hidden="true"></i><span data-i="uc2.h"></span></button>
+          <button type="button" class="cs-tab" role="tab" id="cs3-t" aria-controls="cs3-p" aria-selected="false" tabindex="-1" style="--c:#4A8CF2"><i class="dot" aria-hidden="true"></i><span data-i="uc3.h"></span></button>
+          <button type="button" class="cs-tab" role="tab" id="cs4-t" aria-controls="cs4-p" aria-selected="false" tabindex="-1" style="--c:#E0589F"><i class="dot" aria-hidden="true"></i><span data-i="uc4.h"></span></button>
+          <button type="button" class="cs-tab" role="tab" id="cs5-t" aria-controls="cs5-p" aria-selected="false" tabindex="-1" style="--c:#8B6BEA"><i class="dot" aria-hidden="true"></i><span data-i="uc5.h"></span></button>
+          <button type="button" class="cs-tab" role="tab" id="cs6-t" aria-controls="cs6-p" aria-selected="false" tabindex="-1" style="--c:#F26D5B"><i class="dot" aria-hidden="true"></i><span data-i="uc6.h"></span></button>
+        </div>
+      </div>
+      <div class="cs-panel">
+        <div class="cs-p" role="tabpanel" id="cs1-p" aria-labelledby="cs1-t" tabindex="0" style="--c:#E8A33D">
+          <div class="cs-top"><p class="cs-s" data-i="uc1.s"></p><div class="cs-src"><em data-i="uc.src"></em><span style="--c:#E8A33D" data-i="tag.erp"></span><span style="--c:#3FB27F" data-i="tag.tab"></span><span style="--c:#F26D5B" data-i="tag.pt"></span></div></div>
+          <dl class="cs-flow">
+            <div class="cs-b b1"><dt data-i="uc.p"></dt><dd data-i="uc1.p"></dd></div>
+            <div class="cs-b b2"><dt data-i="uc.a"></dt><dd data-i="uc1.a"></dd></div>
+            <div class="cs-b b3"><dt data-i="uc.v"></dt><dd data-i="uc1.v"></dd></div>
+          </dl>
+        </div>
+        <div class="cs-p" role="tabpanel" id="cs2-p" aria-labelledby="cs2-t" tabindex="0" style="--c:#3FB27F" hidden>
+          <div class="cs-top"><p class="cs-s" data-i="uc2.s"></p><div class="cs-src"><em data-i="uc.src"></em><span style="--c:#4A8CF2" data-i="tag.mail"></span><span style="--c:#8B6BEA" data-i="tag.doc"></span><span style="--c:#3FB27F" data-i="tag.tab"></span></div></div>
+          <dl class="cs-flow">
+            <div class="cs-b b1"><dt data-i="uc.p"></dt><dd data-i="uc2.p"></dd></div>
+            <div class="cs-b b2"><dt data-i="uc.a"></dt><dd data-i="uc2.a"></dd></div>
+            <div class="cs-b b3"><dt data-i="uc.v"></dt><dd data-i="uc2.v"></dd></div>
+          </dl>
+        </div>
+        <div class="cs-p" role="tabpanel" id="cs3-p" aria-labelledby="cs3-t" tabindex="0" style="--c:#4A8CF2" hidden>
+          <div class="cs-top"><p class="cs-s" data-i="uc3.s"></p><div class="cs-src"><em data-i="uc.src"></em><span style="--c:#E8A33D" data-i="tag.erp"></span><span style="--c:#3FB27F" data-i="tag.tab"></span><span style="--c:#4A8CF2" data-i="tag.mail"></span></div></div>
+          <dl class="cs-flow">
+            <div class="cs-b b1"><dt data-i="uc.p"></dt><dd data-i="uc3.p"></dd></div>
+            <div class="cs-b b2"><dt data-i="uc.a"></dt><dd data-i="uc3.a"></dd></div>
+            <div class="cs-b b3"><dt data-i="uc.v"></dt><dd data-i="uc3.v"></dd></div>
+          </dl>
+        </div>
+        <div class="cs-p" role="tabpanel" id="cs4-p" aria-labelledby="cs4-t" tabindex="0" style="--c:#E0589F" hidden>
+          <div class="cs-top"><p class="cs-s" data-i="uc4.s"></p><div class="cs-src"><em data-i="uc.src"></em><span style="--c:#F26D5B" data-i="tag.pt"></span><span style="--c:#E0589F" data-i="tag.crm"></span><span style="--c:#E8A33D" data-i="tag.erp"></span></div></div>
+          <dl class="cs-flow">
+            <div class="cs-b b1"><dt data-i="uc.p"></dt><dd data-i="uc4.p"></dd></div>
+            <div class="cs-b b2"><dt data-i="uc.a"></dt><dd data-i="uc4.a"></dd></div>
+            <div class="cs-b b3"><dt data-i="uc.v"></dt><dd data-i="uc4.v"></dd></div>
+          </dl>
+        </div>
+        <div class="cs-p" role="tabpanel" id="cs5-p" aria-labelledby="cs5-t" tabindex="0" style="--c:#8B6BEA" hidden>
+          <div class="cs-top"><p class="cs-s" data-i="uc5.s"></p><div class="cs-src"><em data-i="uc.src"></em><span style="--c:#3FB27F" data-i="tag.tab"></span><span style="--c:#E8A33D" data-i="tag.erp"></span><span style="--c:#4A8CF2" data-i="tag.mail"></span></div></div>
+          <dl class="cs-flow">
+            <div class="cs-b b1"><dt data-i="uc.p"></dt><dd data-i="uc5.p"></dd></div>
+            <div class="cs-b b2"><dt data-i="uc.a"></dt><dd data-i="uc5.a"></dd></div>
+            <div class="cs-b b3"><dt data-i="uc.v"></dt><dd data-i="uc5.v"></dd></div>
+          </dl>
+        </div>
+        <div class="cs-p" role="tabpanel" id="cs6-p" aria-labelledby="cs6-t" tabindex="0" style="--c:#F26D5B" hidden>
+          <div class="cs-top"><p class="cs-s" data-i="uc6.s"></p><div class="cs-src"><em data-i="uc.src"></em><span style="--c:#3FB27F" data-i="tag.tab"></span><span style="--c:#E8A33D" data-i="tag.erp"></span><span style="--c:#F26D5B" data-i="tag.pt"></span></div></div>
+          <dl class="cs-flow">
+            <div class="cs-b b1"><dt data-i="uc.p"></dt><dd data-i="uc6.p"></dd></div>
+            <div class="cs-b b2"><dt data-i="uc.a"></dt><dd data-i="uc6.a"></dd></div>
+            <div class="cs-b b3"><dt data-i="uc.v"></dt><dd data-i="uc6.v"></dd></div>
+          </dl>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
-<section id="tools" class="bx tint">
-  <div class="wrap wide">
-    <span class="eyebrow" data-i="tk.k"></span>
-    <h2 class="sec" data-i="tk.h"></h2>
-    <p class="sub" data-i="tk.sub"></p>
-    <p class="ro-bar"><span class="ro-i"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span data-i="tk.bar"></span></p>
-    <div class="tks"><article class="tk" style="--c:#E8A33D"><span class="tk-ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><rect x="8" y="6" width="8" height="4" rx="1"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01M16 17.5h.01"/></svg></span><h3 data-i="tk1.h"></h3><p data-i="tk1.p"></p><div class="tk-chips"><span data-i="tk1.c1"></span><span data-i="tk1.c2"></span><span data-i="tk1.c3"></span></div><span class="ro"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span data-i="tk.ro"></span></span></article><article class="tk" style="--c:#E0589F"><span class="tk-ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M17 14.2c2.4.3 4 2.2 4 4.8"/></svg></span><h3 data-i="tk2.h"></h3><p data-i="tk2.p"></p><div class="tk-chips"><span data-i="tk2.c1"></span><span data-i="tk2.c2"></span><span data-i="tk2.c3"></span></div><span class="ro"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span data-i="tk.ro"></span></span></article><article class="tk" style="--c:#3FB27F"><span class="tk-ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9.5h17M3.5 14.5h17M9.5 4v16"/></svg></span><h3 data-i="tk3.h"></h3><p data-i="tk3.p"></p><div class="tk-chips"><span data-i="tk3.c1"></span><span data-i="tk3.c2"></span><span data-i="tk3.c3"></span></div><span class="ro"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span data-i="tk.ro"></span></span></article><article class="tk" style="--c:#4A8CF2"><span class="tk-ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6.5L20.5 7"/></svg></span><h3 data-i="tk4.h"></h3><p data-i="tk4.p"></p><div class="tk-chips"><span data-i="tk4.c1"></span><span data-i="tk4.c2"></span><span data-i="tk4.c3"></span></div><span class="ro"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span data-i="tk.ro"></span></span></article><article class="tk" style="--c:#8B6BEA"><span class="tk-ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg></span><h3 data-i="tk5.h"></h3><p data-i="tk5.p"></p><div class="tk-chips"><span data-i="tk5.c1"></span><span data-i="tk5.c2"></span><span data-i="tk5.c3"></span></div><span class="ro"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span data-i="tk.ro"></span></span></article><article class="tk" style="--c:#F26D5B"><span class="tk-ic"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span><h3 data-i="tk6.h"></h3><p data-i="tk6.p"></p><div class="tk-chips"><span data-i="tk6.c1"></span><span data-i="tk6.c2"></span><span data-i="tk6.c3"></span></div><span class="ro"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span data-i="tk.ro"></span></span></article></div>
-    <p class="tk-more" data-i="tk.more"></p>
-  </div>
-</section>
-
-<section id="security" class="bx">
-  <div class="wrap wide">
-    <span class="eyebrow" data-i="sc.k"></span>
-    <h2 class="sec" data-i="sc.h"></h2>
-    <p class="sub" data-i="sc.sub"></p>
-    <div class="sec-g"><article class="sec-t" style="--c:#2e9e68"><span class="si"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><h3 data-i="sc1.h"></h3><p data-i="sc1.p"></p></article><article class="sec-t" style="--c:#2f4b9c"><span class="si"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span><h3 data-i="sc2.h"></h3><p data-i="sc2.p"></p></article><article class="sec-t" style="--c:#8B6BEA"><span class="si"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/></svg></span><h3 data-i="sc3.h"></h3><p data-i="sc3.p"></p></article><article class="sec-t" style="--c:#4A8CF2"><span class="si"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg></span><h3 data-i="sc4.h"></h3><p data-i="sc4.p"></p></article><article class="sec-t" style="--c:#E8A33D"><span class="si"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></span><h3 data-i="sc5.h"></h3><p data-i="sc5.p"></p></article><article class="sec-t" style="--c:#F26D5B"><span class="si"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></svg></span><h3 data-i="sc6.h"></h3><p data-i="sc6.p"></p></article><article class="sec-t" style="--c:#3FB27F"><span class="si"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg></span><h3 data-i="sc7.h"></h3><p data-i="sc7.p"></p></article><article class="sec-t" style="--c:#E0589F"><span class="si"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5V3h4M16 17l5-5-5-5M21 12H9"/></svg></span><h3 data-i="sc8.h"></h3><p data-i="sc8.p"></p></article></div>
-    <p class="sec-l"><a href="#how" data-i="sc.link"></a></p>
-  </div>
-</section>
-
-<section id="limits" class="bx tint">
-  <div class="wrap wide">
-    <span class="eyebrow" data-i="lm.k"></span>
-    <h2 class="sec" data-i="lm.h"></h2>
-    <div class="lims"><article class="lim"><span class="lim-x" aria-hidden="true"></span><h3 data-i="lm1.h"></h3><p data-i="lm1.p"></p></article><article class="lim"><span class="lim-x" aria-hidden="true"></span><h3 data-i="lm2.h"></h3><p data-i="lm2.p"></p></article><article class="lim"><span class="lim-x" aria-hidden="true"></span><h3 data-i="lm3.h"></h3><p data-i="lm3.p"></p></article><article class="lim"><span class="lim-x" aria-hidden="true"></span><h3 data-i="lm4.h"></h3><p data-i="lm4.p"></p></article></div>
-  </div>
-</section>
-
-<section id="offer" class="bx">
-  <div class="wrap wide">
-    <span class="eyebrow" data-i="of.k"></span>
-    <h2 class="sec" data-i="of.h"></h2>
-    <p class="sub" data-i="of.sub"></p>
-    <ol class="phs"><li class="ph" style="--c:#E8A33D"><span class="pn">1</span><h3 data-i="of1.h"></h3><p data-i="of1.p"></p><p class="pd"><b data-i="of.deliv"></b><span data-i="of1.d"></span></p></li><li class="ph" style="--c:#3FB27F"><span class="pn">2</span><h3 data-i="of2.h"></h3><p data-i="of2.p"></p><p class="pd"><b data-i="of.deliv"></b><span data-i="of2.d"></span></p></li><li class="ph" style="--c:#4A8CF2"><span class="pn">3</span><h3 data-i="of3.h"></h3><p data-i="of3.p"></p><p class="pd"><b data-i="of.deliv"></b><span data-i="of3.d"></span></p></li><li class="ph" style="--c:#8B6BEA"><span class="pn">4</span><h3 data-i="of4.h"></h3><p data-i="of4.p"></p><p class="pd"><b data-i="of.deliv"></b><span data-i="of4.d"></span></p></li></ol>
-  </div>
-</section>
-
-<section id="formulas" class="bx tint">
-  <div class="wrap wide">
-    <span class="eyebrow" data-i="fm.k"></span>
-    <h2 class="sec" data-i="fm.h"></h2>
-    <p class="sub" data-i="fm.sub"></p>
-    <div class="fms"><article class="fm hi"><span class="fm-t" data-i="fm1.t"></span><h3 data-i="fm1.h"></h3><p class="fm-p" data-i="fm1.pr"></p><ul><li data-i="fm1.i1"></li><li data-i="fm1.i2"></li><li data-i="fm1.i3"></li><li data-i="fm1.i4"></li></ul><p class="fm-c" data-i="fm1.cond"></p><a class="btn primary" href="mailto:info@getsocle.com?subject=Socle%20diagnostic%20request" data-ia="href=cta.mail" data-i="fm.cta"></a></article><article class="fm"><span class="fm-t" data-i="fm2.t"></span><h3 data-i="fm2.h"></h3><p class="fm-p" data-i="fm2.pr"></p><ul><li data-i="fm2.i1"></li><li data-i="fm2.i2"></li><li data-i="fm2.i3"></li><li data-i="fm2.i4"></li></ul><p class="fm-c" data-i="fm2.cond"></p><a class="btn" href="mailto:info@getsocle.com" data-i="fm.talk"></a></article><article class="fm"><span class="fm-t" data-i="fm3.t"></span><h3 data-i="fm3.h"></h3><p class="fm-p" data-i="fm3.pr"></p><ul><li data-i="fm3.i1"></li><li data-i="fm3.i2"></li><li data-i="fm3.i3"></li><li data-i="fm3.i4"></li></ul><p class="fm-c" data-i="fm3.cond"></p><a class="btn" href="mailto:info@getsocle.com" data-i="fm.talk"></a></article></div>
-    <p class="fm-more" data-i="fm.more"></p>
-  </div>
-</section>
-
-<section id="who" class="bx">
-  <div class="wrap wide">
-    <span class="eyebrow" data-i="wh.k"></span>
-    <h2 class="sec" data-i="wh.h"></h2>
-    <div class="who-g"><div class="who-c" style="--c:#2f4b9c"><h3 data-i="wh1.h"></h3><ul><li data-i="wh1.i1"></li><li data-i="wh1.i2"></li><li data-i="wh1.i3"></li><li data-i="wh1.i4"></li></ul></div><div class="who-c" style="--c:#2e9e68"><h3 data-i="wh2.h"></h3><ul><li data-i="wh2.i1"></li><li data-i="wh2.i2"></li><li data-i="wh2.i3"></li><li data-i="wh2.i4"></li></ul></div><div class="who-c" style="--c:#E8A33D"><h3 data-i="wh3.h"></h3><ul><li data-i="wh3.i1"></li><li data-i="wh3.i2"></li><li data-i="wh3.i3"></li><li data-i="wh3.i4"></li></ul></div></div>
-  </div>
-</section>
-
-<section id="faq" class="bx tint">
+<section id="faq" class="bx faq">
   <div class="wrap wide faq-w">
     <div class="faq-l">
-      <span class="eyebrow" data-i="fq.k"></span>
-      <h2 class="sec" data-i="fq.h"></h2>
-      <p class="sub" data-i="fq.sub"></p>
-      <a class="btn primary" href="mailto:info@getsocle.com?subject=Socle%20diagnostic%20request" data-ia="href=cta.mail" data-i="fq.cta"></a>
+      <h2 class="sec" data-split data-i="fq.h"></h2>
+      <p class="sub rv" data-i="fq.sub"></p>
     </div>
-    <div class="faq-r"><details open><summary data-i="fq1.q"></summary><p data-i="fq1.a"></p></details><details><summary data-i="fq2.q"></summary><p data-i="fq2.a"></p></details><details><summary data-i="fq3.q"></summary><p data-i="fq3.a"></p></details><details><summary data-i="fq4.q"></summary><p data-i="fq4.a"></p></details><details><summary data-i="fq5.q"></summary><p data-i="fq5.a"></p></details><details><summary data-i="fq6.q"></summary><p data-i="fq6.a"></p></details><details><summary data-i="fq7.q"></summary><p data-i="fq7.a"></p></details><details><summary data-i="fq8.q"></summary><p data-i="fq8.a"></p></details><details><summary data-i="fq9.q"></summary><p data-i="fq9.a"></p></details><details><summary data-i="fq10.q"></summary><p data-i="fq10.a"></p></details><details><summary data-i="fq11.q"></summary><p data-i="fq11.a"></p></details></div>
+    <div class="faq-r stg">
+      <details name="faq" open style="--i:0"><summary data-i="fq1.q"></summary><p data-i="fq1.a"></p></details>
+      <details name="faq" style="--i:1"><summary data-i="fq2.q"></summary><p data-i="fq2.a"></p></details>
+      <details name="faq" style="--i:2"><summary data-i="fq3.q"></summary><p data-i="fq3.a"></p></details>
+      <details name="faq" style="--i:3"><summary data-i="fq4.q"></summary><p data-i="fq4.a"></p></details>
+      <details name="faq" style="--i:4"><summary data-i="fq5.q"></summary><p data-i="fq5.a"></p></details>
+    </div>
   </div>
 </section>
 
-<section id="lexicon" class="bx">
-  <div class="wrap wide">
-    <span class="eyebrow" data-i="lx.k"></span>
-    <h2 class="sec" data-i="lx.h"></h2>
-    <dl class="lex"><div class="lex-i"><dt data-i="lx1.t"></dt><dd data-i="lx1.d"></dd></div><div class="lex-i"><dt data-i="lx2.t"></dt><dd data-i="lx2.d"></dd></div><div class="lex-i"><dt data-i="lx3.t"></dt><dd data-i="lx3.d"></dd></div><div class="lex-i"><dt data-i="lx4.t"></dt><dd data-i="lx4.d"></dd></div><div class="lex-i"><dt data-i="lx5.t"></dt><dd data-i="lx5.d"></dd></div><div class="lex-i"><dt data-i="lx6.t"></dt><dd data-i="lx6.d"></dd></div><div class="lex-i"><dt data-i="lx7.t"></dt><dd data-i="lx7.d"></dd></div></dl>
-  </div>
-</section>
-<!-- MATIERE:END -->
-
-<!-- MATIERE2:START -->
-
-<section id="start" class="bx">
+<section id="start" class="bx start">
   <div class="wrap wide">
     <div class="go">
-      <span class="eyebrow" data-i="go.k"></span>
-      <h2 data-i="go.h"></h2>
-      <p data-i="go.p"></p>
-      <ol class="go-s"><li data-i="go.s1"></li><li data-i="go.s2"></li><li data-i="go.s3"></li></ol>
-      <div class="links">
-        <a class="btn primary" href="mailto:info@getsocle.com?subject=Socle%20diagnostic%20request" data-ia="href=cta.mail" data-i="go.cta"></a>
-        <a class="btn" href="#how" data-i="go.how"></a>
-      </div>
-      <p class="go-n" data-i="go.n"></p>
+      <h2 data-split data-i="go.h"></h2>
+      <p class="go-p rv" data-i="go.p"></p>
+      <div class="links rv"><span class="mag"><a class="btn primary" href="mailto:info@getsocle.com?subject=Socle%20diagnostic%20request" data-ia="href=cta.mail"><span data-i="go.cta"></span><i class="arr" aria-hidden="true"></i></a></span></div>
+      <ul class="go-g">
+        <li style="--i:0"><i class="ck" aria-hidden="true"></i><b data-i="g1.h"></b><span data-i="g1.p"></span></li>
+        <li style="--i:1"><i class="ck" aria-hidden="true"></i><b data-i="g2.h"></b><span data-i="g2.p"></span></li>
+        <li style="--i:2"><i class="ck" aria-hidden="true"></i><b data-i="g3.h"></b><span data-i="g3.p"></span></li>
+      </ul>
     </div>
   </div>
 </section>
-
-<nav class="sitemap" id="sitemap" aria-label="Site map">
-  <div class="wrap wide">
-    <div class="sm-g"><div class="sm-c"><h3 data-i="sm1.h"></h3><ul><li><a href="#how" data-i="nav.how"></a></li><li><a href="#twin" data-i="sm.twin"></a></li><li><a href="#platform" data-i="sm.platform"></a></li><li><a href="#tools" data-i="sm.tools"></a></li></ul></div><div class="sm-c"><h3 data-i="sm2.h"></h3><ul><li><a href="#cases" data-i="nav.cases"></a></li><li><a href="#example" data-i="sm.example"></a></li><li><a href="#workspace" data-i="sm.ws"></a></li><li><a href="#security" data-i="sm.sec"></a></li></ul></div><div class="sm-c"><h3 data-i="sm3.h"></h3><ul><li><a href="#offer" data-i="nav.offer"></a></li><li><a href="#formulas" data-i="sm.formulas"></a></li><li><a href="#faq" data-i="nav.faq"></a></li><li><a href="#lexicon" data-i="sm.lex"></a></li><li><a href="mailto:info@getsocle.com" data-i="nav.contact"></a></li></ul></div></div>
-    <p class="sm-top"><a href="#top" data-i="sm.top"></a></p>
-  </div>
-</nav>
-<!-- MATIERE2:END -->
 </main>
 
 <footer>
@@ -540,65 +353,9 @@
   </div>
 </footer>
 
-<script>(function(){
-  /* Barre du haut : opaque une fois le récit passé. IntersectionObserver, aucun écouteur de défilement. */
-  var hd=document.querySelector('header.top'),mr=document.querySelector('main.rest'),de=document.documentElement,past=false;
-  function f(){hd.classList.toggle('solid',past||de.classList.contains('reduced')||de.classList.contains('nogl'));}
-  if(mr&&'IntersectionObserver' in window){
-    new IntersectionObserver(function(es){past=es[es.length-1].isIntersecting;f();},{rootMargin:'0px 0px -50% 0px'}).observe(mr);
-  }
-  addEventListener('load',f);f();
-  /* Lien actif dans la navigation. */
-  var links=[].slice.call(document.querySelectorAll('nav.main a[href^="#"]'));
-  if('IntersectionObserver' in window&&links.length){
-    var map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a;});
-    var so=new IntersectionObserver(function(es){es.forEach(function(e){var a=map[e.target.id];if(!a)return;if(e.isIntersecting){links.forEach(function(l){l.removeAttribute('aria-current');});a.setAttribute('aria-current','true');}else if(a.getAttribute('aria-current')){a.removeAttribute('aria-current');}});},{rootMargin:'-45% 0px -50% 0px'});
-    Object.keys(map).forEach(function(id){var el=document.getElementById(id);if(el)so.observe(el);});
-  }
-  /* Apparitions au défilement : transform et opacité seulement, une fois par bloc. */
-  if(!('IntersectionObserver' in window))return;
-  var sel=[['main.rest .eyebrow',0],['main.rest h2.sec',0],['main.rest .sub',0],['main.rest .biglead',0],['.how-intro',0],['.how3 p',0],['.how-note',0],['.diagram',0],['.steps li',0],['.how-end',0],
-    ['.tile',0],['.facets-l',0],['.facet',0],['.vs',0],['.jr li',0],['.pull',0],['.xtabs',0],['.xpanels',0],['.xnote',0],
-    ['.chat .msg.me',150],['.chat .msg.ai',650],['.chat .prop',1250],['.wpoints li',300],
-    ['.uc',0],['.ol li',0],['.sub-h',0],['.role',0],['.mod',0],['.open',0],['.layers li',0],['.layers-n',0],
-    ['.ro-bar',0],['.tk',0],['.tk-more',0],['.sec-t',0],['.sec-l',0],['.lim',0],['.ph',0],['.fm',0],['.fm-more',0],['.who-c',0],
-    ['.faq-r details',0],['.lex-i',0],['.go',0],['.sm-c',0]];
-  var io=new IntersectionObserver(function(es){
-    var k=0;
-    es.forEach(function(e){
-      if(!e.isIntersecting)return;
-      var el=e.target;io.unobserve(el);
-      el.style.setProperty('--d',((+el.getAttribute('data-rvd')||0)+Math.min(k,5)*70)+'ms');k++;
-      el.classList.add('in');
-      var done=function(ev){if(ev.target!==el)return;el.classList.remove('rv','in');el.style.removeProperty('--d');el.removeEventListener('animationend',done);};
-      el.addEventListener('animationend',done);
-    });
-  },{threshold:0.08,rootMargin:'0px 0px -6% 0px'});
-  var seen=[];
-  sel.forEach(function(p){document.querySelectorAll(p[0]).forEach(function(el){
-    if(seen.indexOf(el)>-1||el.closest('#story'))return;seen.push(el);
-    if(p[1])el.setAttribute('data-rvd',p[1]);
-    el.classList.add('rv');io.observe(el);});});
-})();</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script>
-  window.__target = 0;
-  (function(){
-    if (document.documentElement.classList.contains('reduced')) return;
-    var story = document.getElementById('story');
-    function fallback(){
-      var r = story.getBoundingClientRect(), h = story.offsetHeight - innerHeight;
-      window.__target = Math.min(1, Math.max(0, -r.top / h));
-    }
-    if (window.gsap && window.ScrollTrigger) {
-      gsap.registerPlugin(ScrollTrigger);
-      ScrollTrigger.create({ trigger: story, start: 'top top', end: 'bottom bottom', onUpdate: function(s){ window.__target = s.progress; } });
-    } else { addEventListener('scroll', fallback, {passive:true}); fallback(); }
-  })();
-</script>
 <script type="module">
   import './assets/i18n.js';
+  import('./assets/home.js').catch(function(e){ console.error(e); document.documentElement.classList.remove('anim'); });
   if (!document.documentElement.classList.contains('reduced')) {
     import('./assets/scene.js').catch(function(e){ console.error(e); document.documentElement.classList.add('nogl'); });
   }
