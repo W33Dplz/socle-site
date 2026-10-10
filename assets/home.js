@@ -15,7 +15,16 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   const hd = $('header.top'), mr = $('main.rest');
   if (!hd) return;
   let past = false;
-  const solid = () => hd.classList.toggle('solid', past || de.classList.contains('reduced') || de.classList.contains('nogl'));
+  /* bannière toujours pleine : logo et menu restent visibles, la page défile dessous */
+  const solid = () => hd.classList.add('solid');
+  const bg = $('.burger', hd), mn = $('#menu');
+  if (bg && mn) {
+    const open = on => { hd.classList.toggle('open', on); bg.setAttribute('aria-expanded', on ? 'true' : 'false'); };
+    bg.addEventListener('click', e => { e.stopPropagation(); open(!hd.classList.contains('open')); });
+    mn.addEventListener('click', e => { if (e.target.closest('a')) open(false); });
+    document.addEventListener('click', e => { if (!hd.contains(e.target)) open(false); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') open(false); });
+  }
   if (mr && hasIO) {
     new IntersectionObserver(es => { past = es[es.length - 1].isIntersecting; solid(); }, { rootMargin: '0px 0px -50% 0px' }).observe(mr);
   }

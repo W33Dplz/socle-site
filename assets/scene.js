@@ -702,9 +702,6 @@ KEYS.forEach(k => { UI['tag_' + k] = mk('', 'tag', C[k]); });
 UI.q = mk('', 'q tailR', '#1f2d4f');
 UI.a = mk('', 'a tailL', '#5c6bc0');
 UI.apv = mk('', 'apv nostem', '#2e9e68');
-/* plan final : ce qu'on voit, nommé */
-UI.lTwin = mk('', 'layer', '#3f5bd9', 26);
-UI.lSocle = mk('', 'layer nostem', '#26346e');
 let apb = null;
 const SRC = {
   erp: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 8v8M9.5 10.2c.7-.8 4.3-.9 4.8.6.5 1.8-4.8.9-4.6 3 .1 1.5 3.9 1.6 4.8.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
@@ -714,8 +711,6 @@ const SRC = {
 function renderCards() {
   KEYS.forEach(k => { UI['tag_' + k].textContent = T('tag.' + k); });
   UI.q.textContent = T('q');
-  UI.lTwin.innerHTML = `<b>${T('layer.twin')}</b><span>${T('layer.twin.s')}</span>`;
-  UI.lSocle.innerHTML = `<b>${T('layer.socle')}</b><span>${T('layer.socle.s')}</span>`;
   UI.a.innerHTML = `<div class="ans"><i class="bolt">⚡</i><span>${T('a')}</span></div><div class="src">${['erp', 'crm', 'pt'].map(k => `<i style="--c:${C[k]}">${SRC[k]}</i>`).join('')}</div>`;
   UI.apv.innerHTML = '<span class="apb"></span>'; apb = UI.apv.querySelector('.apb'); apb.dataset.s = '';
 }
@@ -1011,8 +1006,6 @@ function update(P, time) {
     place(UI.apv, V(PX + 1.7, 3.1, PZ + .5), ap, 150, 52, pressed ? 1.0 : .94 + .06 * Math.sin(time * 6));
     { const want = pressed ? T('approved') : T('approve'); if (apb && apb.dataset.s !== want) { apb.textContent = want; apb.dataset.s = want; } if (apb) apb.classList.toggle('done', pressed); } }
 
-  { const lo = sm(seg(P, .955, .985)); place(UI.lTwin, V(0, twin.position.y + 1.2, 0), lo, 0, -6);
-    place(UI.lSocle, V(0, -1.4, 13.2), sm(seg(P, .97, 1)), MOBILE ? 0 : 300, MOBILE ? 92 : 20, 1); }
   /* chapitres de texte */
   chaps.forEach(c => {
     if (c.id === 'top') { c.style.opacity = 1; c.style.transform = ''; c.classList.add('on'); return; }
