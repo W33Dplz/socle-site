@@ -332,6 +332,8 @@ const clouds = [];
   [[0, 0, 0, 2.4], [2.2, -.3, .3, 1.9], [-2.1, -.4, -.2, 1.8], [.9, .9, .1, 1.7], [-.9, .6, .5, 1.5]].forEach(([a, b, c, r]) => add(g, new THREE.IcosahedronGeometry(r, 2), '#ffffff', a, b, c, {r: .9, cast: false}));
   g.scale.setScalar(s * .9); g.position.set(x, y, z); scene.add(g); clouds.push({g, x, z, i});
 });
+/* portrait : [décalage latéral, hauteur, distance] dans le repère de la caméra ; null = absent en portrait */
+[[-21, 31, 230, 1.7], null, null, [22, 28, 230, 1.5], [2, 34, 245, 1.9]].forEach((pc, i) => { clouds[i].pc = pc; clouds[i].s0 = clouds[i].g.scale.x; });
 
 /* ------------------------------------------------------------------ le SOCLE : plan d'architecte */
 const BP_VERT = `varying vec3 vW; void main(){ vec4 w=modelMatrix*vec4(position,1.); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }`;
@@ -655,7 +657,7 @@ const pillarHalo = (col, x, z) => { const m = new THREE.Mesh(new THREE.PlaneGeom
 const haloMap = pillarHalo('#ffd36e', -PILD.x, PILD.z), haloLib = pillarHalo('#86a9ff', PILD.x, -PILD.z);
 
 /* jetons fusionnés au-dessus du jumeau : le client, son dossier, sa facture (la carte) */
-const CH = {y: 22.4, dx: 4.4, size: 1.85};
+const CH = {y: 20.8, dx: 4.4, size: 1.85};
 const mClient = mergedTile('client', [C.erp, C.crm, C.tab], CH.size); mClient.position.set(-CH.dx, CH.y, 0);
 const mJob = mergedTile('job', [C.crm, C.mail, C.doc], CH.size); mJob.position.set(0, CH.y, 0);
 const mInv = mergedTile('invoice', [C.erp, C.mail, C.doc], CH.size); mInv.position.set(CH.dx, CH.y, 0);
@@ -837,13 +839,140 @@ KEYS.forEach(k => {
 });
 let ansBeam;
 {
-  const a = V(0, TWY + .9, 0), b = V(PX + 1.7, 3.6, PZ + .5), mid = V(-1.5, TWY * .5, 6);
-  const curve_ = new THREE.CatmullRomCurve3([a, mid, b]);
-  const geo = new THREE.TubeGeometry(curve_, 60, .12, 8, false);
+  /* la réponse sort du jumeau par la tuile « facture », contourne le bord avant du plateau et redescend vers l'agent */
+  const a = V(CH.dx, CH.y, 0), b = V(PX + 1.7, 3.6, PZ + .5);
+  const curve_ = new THREE.CatmullRomCurve3([a, V(CH.dx + .4, 19.2, 7.5), V(CH.dx - 1.5, TWY * .8, 14.8), V(1.2, 9.5, 15.2), b]);
+  const geo = new THREE.TubeGeometry(curve_, 70, .12, 8, false);
   const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({color: '#f6c64a', transparent: true, opacity: .95, toneMapped: false})); m.visible = false; m.renderOrder = 7; scene.add(m);
-  /* deux impulsions sur le faisceau de la réponse : un cube (la carte), puis une feuille (la bibliothèque) */
-  const ic = new THREE.Mesh(dotCubeGeo, dotMat), is = new THREE.Mesh(dotSheetGeo, dotMat); ic.visible = is.visible = false; ic.renderOrder = is.renderOrder = 8; scene.add(ic, is);
-  ansBeam = {m, idx: geo.index.count, curve: curve_, ic, is};
+  ansBeam = {m, idx: geo.index.count, curve: curve_};
+}
+
+/* ------------------------------------------------------------------ LE GRAPHE DU JUMEAU
+   Le plateau montre un vrai graphe : des nœuds aux couleurs de leur outil d'origine (les enregistrements de chaque outil), reliés entre eux et aux trois objets
+   unifiés (client, dossier, facture). Une question y laisse une impulsion qui traverse plusieurs outils, ramasse deux plaques de la bibliothèque et revient en réponse.
+   Quand une source change, un nœud naît de lui-même puis se range. Nœuds, tiges, ombres et liens sont instanciés (4 appels de dessin) ; aucun texte. */
+const GRAPH = {nodes: [], edges: [], by: {}, tiles: []};
+const GT = {            /* le film du graphe, en secondes */
+  bloom: 34.3,          /* les enregistrements naissent, outil par outil */
+  prov: 35.3,           /* les liens objet unifié -> enregistrement */
+  cross: 36.2,          /* les liens d'un outil à l'autre */
+  ask0: 38.7, hop: .24, exit1: 41.25,   /* la question monte (38,7), traverse le graphe, la réponse redescend */
+  back: [42.1, 42.5],   /* les deux plaques ramassées reviennent à leur place */
+  ev: [{k: 'mail', t: 36.3, node: 'mail.D', to: 'U.job'}, {k: 'erp', t: 43.1, node: 'erp.E', to: 'U.invoice'}, {k: 'doc', t: 44.6, node: 'doc.F', to: 'U.invoice'}],
+};
+const UPV = V(0, 1, 0), GWHITE = new THREE.Color('#ffffff'), GGOLD = new THREE.Color('#ffcf4a');
+{
+  const mixC = (hex, k) => new THREE.Color(hex).lerp(GWHITE, k);
+  const addN = (id, k, x, y, z, r, t0, wk = 0) => { const n = {id, k, p: V(x, y, z), r, t0, col: mixC(C[k], wk), hits: [], idx: GRAPH.nodes.length}; GRAPH.nodes.push(n); GRAPH.by[id] = n; return n; };
+  const addE = (a, b, col, rad, t0, dur = .7) => { GRAPH.edges.push({a: GRAPH.by[a], b: GRAPH.by[b], col, rad, t0, dur, hits: [], idx: GRAPH.edges.length}); };
+  [['client', mClient], ['job', mJob], ['invoice', mInv]].forEach(([n, m]) => { const u = {id: 'U.' + n, p: V(), r: 1, u: m, hits: [], tile: true}; GRAPH.by[u.id] = u; GRAPH.tiles.push(u); });
+  const ORDER = ['erp', 'crm', 'tab', 'mail', 'doc', 'pt'];
+  /* [dx, dy, dz, r] autour du centre du socle de l'outil : A (sur le socle), B (en hauteur, côté extérieur), C (bas, côté intérieur) */
+  const OFF = {
+    tab: [[0, 2.35, -.55, .62], [-2.3, 3.1, -1.3, .45], [-1.1, 1.75, 1.9, .38]],
+    erp: [[0, 2.35, -.55, .62], [-2.3, 3.3, -1.7, .45], [-2.0, 1.75, 1.8, .38]],
+    crm: [[0, 2.35, -.55, .62], [-2.3, 3.1, 1.3, .45], [-1.0, 1.75, -2.0, .38]],
+    mail: [[0, 2.35, -.55, .62], [2.3, 3.1, -1.2, .45], [1.2, 1.75, 2.0, .38]],
+    doc: [[0, 2.35, -.55, .62], [2.3, 3.3, 1.7, .45], [2.0, 1.75, -1.8, .38]],
+    pt: [[0, 2.35, -.55, .62], [2.3, 3.1, -1.3, .45], [1.0, 1.75, -2.0, .38]],
+  };
+  ORDER.forEach((k, i) => {
+    const o = DEF[k], px = o.x * TWS, pz = o.z * TWS;
+    ['A', 'B', 'C'].forEach((L, j) => { const [dx, dy, dz, r] = OFF[k][j]; addN(k + '.' + L, k, px + dx, .4 + dy, pz + dz, r, GT.bloom + i * .2 + [0, .35, .5][j], j ? .22 : 0); });
+  });
+  const tc = (k, w = .12) => mixC(C[k], w);
+  [['client', 'erp'], ['client', 'crm'], ['client', 'tab'], ['job', 'crm'], ['job', 'tab'], ['job', 'mail'], ['job', 'doc'], ['job', 'pt'], ['invoice', 'erp'], ['invoice', 'mail'], ['invoice', 'doc']]
+    .forEach(([u, k], j) => addE('U.' + u, k + '.A', tc(k), .085, GT.prov + j * .11, .8));
+  [['tab', 'erp'], ['erp', 'crm'], ['mail', 'doc'], ['doc', 'pt'], ['tab', 'mail'], ['crm', 'pt']]
+    .forEach(([a, b], j) => addE(a + '.A', b + '.A', mixC('#5f7fe0', .1), .07, GT.cross + j * .1, .8));
+  ORDER.forEach(k => { ['B', 'C'].forEach(L => { const n = GRAPH.by[k + '.' + L]; addE(k + '.A', n.id, tc(k, .4), .055, n.t0 + .3, .5); }); });
+  /* quand une source change : un nœud naît de lui-même, se relie, puis se range */
+  const EVOFF = {'mail.D': [-1.9, 3.5, 1.1], 'erp.E': [2.0, 3.6, 2.0], 'doc.F': [-1.7, 3.5, 2.1]};
+  GT.ev.forEach(ev => { const k = ev.k, o = DEF[k], [dx, dy, dz] = EVOFF[ev.node];
+    const n = addN(ev.node, k, o.x * TWS + dx, .4 + dy, o.z * TWS + dz, .42, ev.t + .25, .08); n.hits.push(ev.t + .55);
+    addE(GRAPH.by[k + '.A'].id, n.id, tc(k, .3), .06, ev.t + .55, .5); addE(n.id, ev.to, tc(k, .15), .075, ev.t + .8, .7); });
+  /* le trajet de l'impulsion : chaque tronçon allume le lien qu'il emprunte */
+  GT.way = ['U.job', 'pt.A', 'crm.A', 'U.client', 'erp.A', 'U.invoice'].map((id, i) => ({id, t: GT.ask0 + .6 + i * GT.hop}));
+  GT.way.forEach((w, i) => { const n = GRAPH.by[w.id]; n.hits.push(w.t);
+    if (i) { const p = GT.way[i - 1].id; const e = GRAPH.edges.find(e => (e.a.id === p && e.b.id === w.id) || (e.b.id === p && e.a.id === w.id)); if (e) e.hits.push((GT.way[i - 1].t + w.t) / 2); else console.warn('graphe : lien manquant', p, w.id); } });
+  GT.pick = [GT.way[3].t, null, GT.way[5].t];   /* la règle (liste) est ramassée sur le client, le document (page) sur la facture */
+}
+{
+  const nN = GRAPH.nodes.length, nE = GRAPH.edges.length;
+  const sph = new THREE.SphereGeometry(1, 22, 16), cg = new THREE.CylinderGeometry(1, 1, 1, 8, 1, false); cg.translate(0, .5, 0);
+  const disc = new THREE.CircleGeometry(1, 28); disc.rotateX(-Math.PI / 2);
+  const mk3 = (geo, material, n, ro) => { const m = new THREE.InstancedMesh(geo, material, n); m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.frustumCulled = false; m.castShadow = m.receiveShadow = false; if (ro) m.renderOrder = ro; twin.add(m);
+    for (let i = 0; i < n; i++) m.setColorAt(i, GWHITE); m.instanceColor.setUsage(THREE.DynamicDrawUsage); return m; };
+  /* les nœuds sont de vrais objets (un matériau chacun) : sur la machine de test, mettre à jour chaque image un tampon instancié de sphères coûtait ~5 ms, vingt et un objets coûtent ~1 ms */
+  const nodeGeo = new THREE.SphereGeometry(1, 20, 14);
+  GRAPH.nodeMesh = GRAPH.nodes.map(n => { const m = new THREE.Mesh(nodeGeo, new THREE.MeshStandardMaterial({color: n.col, roughness: .28, envMapIntensity: 1.0})); m.castShadow = m.receiveShadow = false; m.visible = false; twin.add(m); return m; });
+  GRAPH.mS = mk3(cg, new THREE.MeshBasicMaterial({color: '#ffffff', toneMapped: false}), nN);
+  GRAPH.mF = mk3(disc, new THREE.MeshBasicMaterial({color: '#ffffff', transparent: true, opacity: .42, depthWrite: false, toneMapped: false}), nN, 5);
+  GRAPH.mE = mk3(cg, new THREE.MeshBasicMaterial({color: '#ffffff', toneMapped: false}), nE);
+  /* anneaux : le signal « une source a changé », posé sur le socle de l'outil concerné */
+  const ringTex = canvasTex(128, 128, (x, w, h) => { x.strokeStyle = '#fff'; x.lineWidth = 6; x.beginPath(); x.arc(64, 64, 54, 0, 7); x.stroke(); });
+  GRAPH.rings = GT.ev.map(ev => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({map: ringTex, color: C[ev.k], transparent: true, depthWrite: false, toneMapped: false, opacity: 0}));
+    m.rotation.x = -Math.PI / 2; m.position.set(DEF[ev.k].x * TWS, .5, DEF[ev.k].z * TWS); m.renderOrder = 5; m.visible = false; twin.add(m); return m; });
+  /* l'impulsion : un cœur blanc, un halo qui prend la couleur de l'outil traversé, une traîne de petites sphères qui garde la mémoire des outils visités */
+  const pm = (c, o) => new THREE.MeshBasicMaterial({color: c, toneMapped: false, depthTest: false, transparent: true, opacity: o});
+  GRAPH.pu = {core: new THREE.Mesh(new THREE.SphereGeometry(.5, 16, 12), pm('#ffffff', 1)),
+    halo: new THREE.Sprite(new THREE.SpriteMaterial({map: softTex, color: '#3f6fe8', transparent: true, depthWrite: false, depthTest: false, toneMapped: false, opacity: .95})),
+    trail: [...Array(8)].map(() => new THREE.Mesh(sph, pm('#ffffff', .9)))};
+  const {core, halo, trail} = GRAPH.pu; core.renderOrder = 13; halo.renderOrder = 12; trail.forEach(t => { t.renderOrder = 12; });
+  [core, halo, ...trail].forEach(o => { o.visible = false; scene.add(o); });
+  /* montée de la question : de l'agent jusqu'à l'objet « dossier » */
+  const botTop = V(PX + 1.7, 4.7, PZ + .5), jobTop = V(0, CH.y, 0);
+  GRAPH.rise = new THREE.CatmullRomCurve3([botTop, V(-3.4, 10.5, 14.6), V(-2.6, 17.2, 8.6), V(-.8, 20.4, 3.2), jobTop]);
+}
+const _gw = V(), _gv = V(), _gc = new THREE.Color(), _go = new THREE.Object3D(), _gq = new THREE.Quaternion();
+const hitFl = (hits, sec, d = .6) => { let f = 0; for (let i = 0; i < hits.length; i++) if (sec >= hits[i]) f = Math.max(f, 1 - (sec - hits[i]) / d); return Math.max(0, f); };
+const wayPos = (i, out) => { const n = GRAPH.by[GT.way[i].id], s = twin.scale.x; return out.set(twin.position.x + n.p.x * s, twin.position.y + n.p.y * s, twin.position.z + n.p.z * s); };
+/* position de l'impulsion à l'instant t (fonction pure du temps : la traîne la rejoue dans le passé) */
+function headAt(t, out) {
+  const W = GT.way, last = W.length - 1;
+  if (t < W[0].t) { const u = sm(seg(t, GT.ask0, W[0].t)); GRAPH.rise.getPointAt(u, out); return out.addScaledVector(_gv.copy(wayPos(0, _gw)).sub(GRAPH.rise.points[GRAPH.rise.points.length - 1]), u * u); }
+  if (t < W[last].t) { let i = 0; while (i < last - 1 && t >= W[i + 1].t) i++; const u = sm(seg(t, W[i].t, W[i + 1].t)); return wayPos(i, out).lerp(wayPos(i + 1, _gw), u); }
+  const u = sm(seg(t, W[last].t, GT.exit1)); ansBeam.curve.getPointAt(u, out);
+  return out.addScaledVector(_gv.copy(wayPos(last, _gw)).sub(ansBeam.curve.points[0]), (1 - u) * (1 - u));
+}
+const COL_Q = new THREE.Color('#3f6fe8');
+function headCol(t, out) {
+  const W = GT.way, last = W.length - 1, wc = i => (GRAPH.by[W[i].id].tile ? GGOLD : GRAPH.by[W[i].id].col);
+  if (t < W[0].t) return out.copy(COL_Q).lerp(GGOLD, sm(seg(t, GT.ask0 + .2, W[0].t)));
+  if (t < W[last].t) { let i = 0; while (i < last - 1 && t >= W[i + 1].t) i++; return out.copy(wc(i)).lerp(wc(i + 1), sm(seg(t, W[i].t, W[i + 1].t))); }
+  return out.copy(GGOLD);
+}
+function updateGraph(sec, time) {
+  const G = GRAPH, s = twin.scale.x;
+  G.tiles.forEach(u => { const m = u.u; u.p.set((m.position.x - twin.position.x) / s, (m.position.y - twin.position.y) / s, (m.position.z - twin.position.z) / s); });
+  G.nodes.forEach((n, i) => {
+    const fl = hitFl(n.hits, sec), pop = eb(seg(sec, n.t0, n.t0 + .7));
+    const sc = Math.max(.0005, n.r * pop * (1 + .4 * fl + .03 * Math.sin(time * 1.6 + i * 1.3)));
+    const nm = G.nodeMesh[i]; nm.visible = pop > .002; nm.position.copy(n.p); nm.scale.setScalar(sc); nm.material.color.copy(n.col).lerp(GWHITE, fl * .78);
+    const h = Math.max(.0005, (n.p.y - .47 - n.r * .7) * clamp(pop));
+    _go.position.set(n.p.x, .47, n.p.z); _go.scale.set(.05, h, .05); _go.updateMatrix(); G.mS.setMatrixAt(i, _go.matrix);
+    G.mS.setColorAt(i, _gc.copy(n.col).lerp(GWHITE, .5));
+    _go.position.set(n.p.x, .465, n.p.z); _go.scale.setScalar(Math.max(.0005, n.r * 1.3 * clamp(pop))); _go.updateMatrix(); G.mF.setMatrixAt(i, _go.matrix);
+    G.mF.setColorAt(i, n.col);
+  });
+  G.edges.forEach((e, i) => {
+    const k = eo(seg(sec, e.t0, e.t0 + e.dur)), lit = hitFl(e.hits, sec, 1.5);
+    _gv.copy(e.b.p).sub(e.a.p); const L = Math.max(_gv.length(), 1e-4);
+    _go.position.copy(e.a.p); _go.quaternion.copy(_gq.setFromUnitVectors(UPV, _gv.multiplyScalar(1 / L)));
+    const r = k > .001 ? e.rad * (1 + 1.2 * lit) : 0.0005; _go.scale.set(r, Math.max(.0005, L * k), r); _go.updateMatrix(); G.mE.setMatrixAt(i, _go.matrix);
+    G.mE.setColorAt(i, _gc.copy(e.col).lerp(GGOLD, lit * .9));
+  });
+  [G.mS, G.mF, G.mE].forEach(m => { m.instanceMatrix.needsUpdate = true; m.instanceColor.needsUpdate = true; });
+  GT.ev.forEach((ev, j) => { const r = G.rings[j], u = seg(sec, ev.t, ev.t + 1.5); r.visible = u > 0 && u < 1; if (r.visible) { r.scale.setScalar(2.2 + 8.5 * eo(u)); r.material.opacity = .85 * Math.pow(1 - u, 1.4); } });
+  /* l'impulsion */
+  const pu = G.pu, on = sec > GT.ask0 && sec < GT.exit1 + .45;
+  [pu.core, pu.halo, ...pu.trail].forEach(o => { o.visible = on; });
+  if (on) {
+    const vis = sm(seg(sec, GT.ask0, GT.ask0 + .2)) * (1 - sm(seg(sec, GT.exit1 - .05, GT.exit1 + .4)));
+    headAt(sec, pu.core.position); pu.halo.position.copy(pu.core.position); pu.core.scale.setScalar(Math.max(.001, vis));
+    headCol(sec, _gc); pu.halo.material.color.copy(_gc); pu.halo.scale.setScalar(Math.max(.001, 5.0 * vis * (1 + .1 * Math.sin(time * 14))));
+    pu.trail.forEach((tr, i) => { const tt = sec - (i + 1) * .045; tr.visible = tt > GT.ask0; if (tr.visible) { headAt(tt, tr.position); headCol(tt, tr.material.color); tr.scale.setScalar(Math.max(.001, .4 * vis * (1 - (i + 1) / 9))); } });
+  }
 }
 
 /* ------------------------------------------------------------------ cartes HTML */
@@ -943,8 +1072,8 @@ function update(P, time) {
   const pw = seg(P, .70, .9);
   const sec = P * FILMS;
   /* fin : les deux piliers s'éclairent l'un après l'autre, puis se fondent dans le bleu doux de la fin */
-  const eMap = sm(seg(sec, 42.6, 43.4)) * (1 - .8 * sm(seg(sec, 43.8, 45.0))), eLib = sm(seg(sec, 43.6, 44.4)) * (1 - .8 * sm(seg(sec, 44.8, 46)));
-  const toBlue = sm(seg(sec, 43.8, 45.4));
+  const eMap = sm(seg(sec, 43.0, 43.8)) * (1 - .8 * sm(seg(sec, 44.2, 45.4))), eLib = sm(seg(sec, 44.0, 44.8)) * (1 - .8 * sm(seg(sec, 45.2, 46)));
+  const toBlue = sm(seg(sec, 44.2, 45.8));
   /* caméra */
   let [az, el, d, tx, ty, tz] = camState(P);
   if (ASP < 1) { az = lerp(95, 8, sm(seg(P, .3, .45))); /* portrait : regarder le village dans l'axe, les six îlots tiennent dans l'écran */ el = lerp(el, Math.max(26, el * .8), sm(seg(P, .4, .55))); }
@@ -958,7 +1087,16 @@ function update(P, time) {
   const sat = lerp(.5, 1.02, sm(seg(P, .30, .56))) + .45 * Math.sin(Math.PI * seg(P, .70, .80)) + .08 * sm(seg(P, .72, .8));
   const fl = `saturate(${sat.toFixed(2)})`; if (fl !== lastFilter) { canvas.style.filter = fl; lastFilter = fl; }
   /* nuages */
-  clouds.forEach(c => { const out = sm(seg(p, .22, .4)); c.g.position.x = c.x + Math.sin(time * .07 + c.i) * 2 + out * (c.x > 0 ? 24 : -24); c.g.position.y = lerp(c.g.position.y, c.g.position.y, 0); c.g.visible = out < .99; });
+  { const out = sm(seg(p, .22, .4));
+    if (ASP < 1) {
+      const out = sm(seg(p, .17, .27));
+      /* portrait : les nuages sont accrochés à la caméra, loin derrière les îlots et dans la bande de ciel au-dessus d'eux, et sortent sur le côté (jamais vers la caméra) : aucun ne peut recouvrir un îlot */
+      const rx = camera.matrixWorld.elements, fx = -rx[8], fy = -rx[9], fz = -rx[10];
+      clouds.forEach(c => { const pc = c.pc; c.g.visible = !!pc && out < .99; if (!c.g.visible) return;
+        const X = pc[0] + Math.sin(time * .07 + c.i) * 1.2 + out * (pc[0] > 0 ? 30 : -30), Y = pc[1] + Math.sin(time * .09 + c.i * 2) * .5;
+        c.g.scale.setScalar(c.s0 * pc[3]); c.g.position.set(camera.position.x + fx * pc[2] + rx[0] * X + rx[4] * Y, camera.position.y + fy * pc[2] + rx[1] * X + rx[5] * Y, camera.position.z + fz * pc[2] + rx[2] * X + rx[6] * Y); });
+    } else clouds.forEach(c => { if (c.s0) c.g.scale.setScalar(c.s0); c.g.position.x = c.x + Math.sin(time * .07 + c.i) * 2 + out * (c.x > 0 ? 24 : -24); c.g.visible = out < .99; });
+  }
 
   /* îlots : flottants, puis posés sur le socle */
   KEYS.forEach((k, i) => {
@@ -1079,7 +1217,7 @@ function update(P, time) {
       const pulseT = Math.sin(Math.PI * seg(P, .70, .78)); twFrame.material.emissiveIntensity = reveal * (.55 + .7 * pulseT);
       KEYS.forEach((k, i) => {
         const pad = twPads[k], ps = eb(seg(P, .59 + i * .008, .64 + i * .008)); pad.scale.setScalar(Math.max(.001, ps)); pad.visible = ps > .01;
-        pad.userData.row.forEach((tl, j) => { const ts = eb(seg(P, .625 + i * .006 + j * .008, .665 + i * .006 + j * .008)); tl.scale.setScalar(Math.max(.001, ts * 1.2)); tl.quaternion.copy(camera.quaternion); });
+        pad.userData.row.forEach((tl, j) => { const ts = eb(seg(P, .625 + i * .006 + j * .008, .665 + i * .006 + j * .008)) * (1 - eo(seg(sec, GT.bloom + .1 + i * .15, GT.bloom + .75 + i * .15))); tl.scale.setScalar(Math.max(.001, ts * 1.2)); tl.visible = ts > .004; tl.quaternion.copy(camera.quaternion); });
       });
       twLinks.forEach((lk, i) => { const f = eo(seg(P, .63 + i * .004, .685)); lk.visible = f > .01; lk.material.uniforms.uFill.value = f; lk.material.uniforms.uTime.value = time; lk.material.uniforms.uFlow.value = sm(seg(P, .70, .74)); });
       const ns = eb(seg(P, .655, .69)); twNode.visible = ns > .01; twNode.scale.setScalar(Math.max(.001, ns));
@@ -1092,16 +1230,15 @@ function update(P, time) {
         if (on) { const n = Math.floor(f.idx * clamp(u) / 6) * 6; f.mA.geometry.setDrawRange(0, n); f.mB.geometry.setDrawRange(0, n); }
         if (f.dot.visible) { const tt = time * .45 + i * .17, lap = Math.floor(tt), cb = lap % 2 === 0; f.curve.getPointAt(tt - lap, f.dot.position); f.cube.visible = cb; f.sheet.visible = !cb; f.dot.rotation.y = time * 3 + i; f.dot.rotation.x = cb ? time * 2 : .5 * Math.sin(time * 3 + i); }
       });
-      const au = eo(seg(P, .86, .89)), aon = au > .01 && P < .955; ansBeam.m.visible = aon; if (aon) ansBeam.m.geometry.setDrawRange(0, Math.floor(ansBeam.idx * clamp(au) / 6) * 6);
-      { const ion = aon && au > .98; ansBeam.ic.visible = ansBeam.is.visible = ion;
-        if (ion) { ansBeam.curve.getPointAt((time * .42) % 1, ansBeam.ic.position); ansBeam.curve.getPointAt((time * .42 + .5) % 1, ansBeam.is.position); ansBeam.ic.rotation.set(time * 2, time * 3, 0); ansBeam.is.rotation.set(.4 * Math.sin(time * 3), time * 3, 0); } }
+      { const au = sm(seg(sec, GT.way[GT.way.length - 1].t, GT.exit1)), fade = 1 - sm(seg(sec, 43.0, 44.3)), aon = au > .01 && fade > .01; ansBeam.m.visible = aon;
+        if (aon) { ansBeam.m.geometry.setDrawRange(0, Math.floor(ansBeam.idx * clamp(au) / 6) * 6); ansBeam.m.material.opacity = .95 * fade; } }
     }
     GLOW.letters.forEach((m, i) => { const l = sm(seg(P, .70 + i * .012, .74 + i * .012)); const st = sm(seg(P, .8, .9)); m.material.color.lerpColors(cNavy, cBright, l * (1 - .55 * st)); m.material.emissiveIntensity = l * (1 - .7 * st) * (.85 + .3 * Math.sin(time * 3 + i)); });
     { const l = sm(seg(P, .70, .76)); GLOW.border.material.color.lerpColors(cBrand, cBrandB, l); const st = 1 - .6 * sm(seg(P, .8, .9)); GLOW.border.material.emissiveIntensity = l * st * (.9 + .2 * Math.sin(time * 3)); slabBase.material.color.lerpColors(cBase, cBaseB, l * st); slabBase.material.emissiveIntensity = l * .45 * st;
       sheetMats.forEach(m => { m.emissiveIntensity = l * st * .22 + eLib * .3; }); jointMat.emissiveIntensity = 1.2 + l * .6 + .5 * eMap; }
     KEYS.forEach((k, i) => {
       const o = DEF[k], arr = arrive(k), lit = sm(seg(P, arr, arr + .03)); o.litv = lit;
-      halos[k].material.opacity = lit * (.34 + .1 * Math.sin(time * 3 + i)); halos[k].visible = lit > .01;
+      { let evb = 0; GT.ev.forEach(ev => { if (ev.k === k) evb = Math.max(evb, bell(sec, ev.t - .3, ev.t + .2, ev.t + 1.4)); }); halos[k].material.opacity = lit * (.34 + .1 * Math.sin(time * 3 + i)) + .5 * evb; halos[k].visible = lit > .01 || evb > .01; }
       const R = robots[k], m = R.userData.m;
       const sc = k === 'pt' ? lerp(3.4, 4.3, lit) * (1 + .25 * Math.sin(Math.PI * seg(P, arr, arr + .04))) : 4.3 * eb(seg(P, arr + .004, arr + .04));
       R.scale.setScalar(Math.max(.001, sc)); R.visible = sc > .002;
@@ -1120,8 +1257,8 @@ function update(P, time) {
       b.sp.visible = lit > .02;
       if (b.sp.visible) {
         if (idx !== b.last) { b.sp.material.map = bTex(ICONS[(idx + b.i + b.j * 2) % 4], b.k); b.last = idx; }
-        b.sp.position.set(o.g.position.x + (b.j - 1) * 2.4, o.g.position.y + 6.4 + ph * 4.2, o.g.position.z + 1.0);
-        b.sp.material.opacity = Math.sin(Math.PI * ph) * lit * (1 - sm(seg(P, .815, .845))); b.sp.scale.setScalar(5.0 * (.5 + .5 * eb(seg(ph, 0, .22))));
+        b.sp.position.set(o.g.position.x + (b.j - 1) * 2.4, o.g.position.y + 6.4 + ph * 3.2, o.g.position.z + 1.0);
+        b.sp.material.opacity = Math.sin(Math.PI * ph) * lit * (1 - sm(seg(P, .79, .82))); b.sp.scale.setScalar(4.2 * (.5 + .5 * eb(seg(ph, 0, .22))));
       }
     });
   }
@@ -1155,19 +1292,26 @@ function update(P, time) {
   });
   const fin_ = sm(seg(P, .925, .955));
   [[mClient, 1, eb(seg(sec, FUSE_T[1] - .5, FUSE_T[1] + .4))], [mJob, 0, eb(SEC(P, 31.4, 32.3))], [mInv, 1, eb(SEC(P, 31.7, 32.6))]].forEach(([m, sg, f], j) => {
-    m.visible = f > .01; m.scale.setScalar(Math.max(.001, f));
+    m.visible = f > .01; m.scale.setScalar(Math.max(.001, f * (1 + .24 * hitFl(GRAPH.tiles[j].hits, sec))));
     m.position.y = CH.y - 1.2 * fin_ + .2 * Math.sin(time * 1.5 + sg + j); m.quaternion.copy(cur);
   });
   { const fl = mClient.userData.flash, h = bell(sec, FUSE_T[1] - .5, FUSE_T[1] + .1, FUSE_T[1] + 1.3); fl.visible = h > .01; fl.material.opacity = .95 * h; }
   /* de ce client unique partent deux chaînes (dossier, facture), puis le savoir s'accroche à chaque objet : règle, décision, document */
-  { const ck = [eo(SEC(P, FUSE_T[1] + .3, FUSE_T[1] + 1.1)), eo(SEC(P, FUSE_T[1] + .6, FUSE_T[1] + 1.4))], pairs = [[mClient, mJob], [mJob, mInv]], gone2 = 1 - sm(SEC(P, 41.4, 42.4)), gone3 = 1 - sm(SEC(P, 37.2, 38.2));
+  { const ck = [eo(SEC(P, FUSE_T[1] + .3, FUSE_T[1] + 1.1)), eo(SEC(P, FUSE_T[1] + .6, FUSE_T[1] + 1.4))], pairs = [[mClient, mJob], [mJob, mInv]], gone2 = 1 - sm(SEC(P, 41.4, 42.4));
     pairs.forEach(([a, b], j) => { const th = chain[j]; th.visible = ck[j] > .01 && gone2 > .01 && a.visible && b.visible; if (th.visible) { setThread(th, _a.copy(a.position).setX(a.position.x + 1.1), _b.copy(b.position).setX(b.position.x - 1.1), ck[j]); th.material.opacity = gone2; } });
     kPlaques.forEach((kp, j) => {
-      const t0 = FUSE_T[1] + 1.1 + j * .45, s = eb(SEC(P, t0, t0 + .9)) * gone3, drop = 1 - eo(SEC(P, t0, t0 + .9));
-      kp.t.visible = s > .01; kp.t.scale.setScalar(Math.max(.001, s)); kp.t.position.set(kp.tgt.position.x, kp.tgt.position.y + 3.9 + drop * 1.6 + .12 * Math.sin(time * 1.3 + j * 2), kp.tgt.position.z); kp.t.quaternion.copy(cur);
-      const k = eo(SEC(P, t0 + .45, t0 + 1.15)); kp.th.visible = k > .01 && kp.t.visible; if (kp.th.visible) { setThread(kp.th, _a.copy(kp.tgt.position).setY(kp.tgt.position.y + 1.05), _b.copy(kp.t.position).setY(kp.t.position.y - 1.0), k); kp.th.material.opacity = gone3; }
+      const t0 = FUSE_T[1] + 1.1 + j * .45, pick = GT.pick[j], back = pick ? GT.back[j > 1 ? 1 : 0] : 0, carried = pick && sec >= pick && sec < back;
+      let u0 = t0; if (pick && sec >= back) u0 = back;
+      let s_ = eb(seg(sec, u0, u0 + .9)), drop = 1 - eo(seg(sec, u0, u0 + .9));
+      if (pick && sec >= pick && sec < back) { s_ = 1 - sm(seg(sec, GT.exit1 - .05, GT.exit1 + .3)); drop = 0; }
+      kp.t.position.set(kp.tgt.position.x, kp.tgt.position.y + 3.2 + drop * 1.3 + .12 * Math.sin(time * 1.3 + j * 2), kp.tgt.position.z);
+      const cs = carried ? sm(seg(sec, pick, pick + .45)) : 0;
+      if (carried) { headAt(sec - (j ? .22 : .3), _b); _b.y += 1.4; kp.t.position.lerp(_b, cs); }
+      kp.t.visible = s_ > .01; kp.t.scale.setScalar(Math.max(.001, s_ * (carried ? 1 + .12 * Math.sin(time * 9 + j) : 1))); kp.t.quaternion.copy(cur);
+      const k = eo(seg(sec, u0 + .45, u0 + 1.15)) * (1 - cs); kp.th.visible = k > .01 && kp.t.visible; if (kp.th.visible) { setThread(kp.th, _a.copy(kp.tgt.position).setY(kp.tgt.position.y + 1.05), _b.copy(kp.t.position).setY(kp.t.position.y - 1.0), k); kp.th.material.opacity = 1; }
     });
   }
+  updateGraph(sec, time);
 
   /* deux matières dans les veines : des cubes (enregistrements) montent dans la carte, des feuilles (documents) sont aspirées dans la bibliothèque */
   flows.forEach(f => {
@@ -1198,7 +1342,7 @@ function update(P, time) {
   /* équipe */
   const crew = eb(seg(p, .6, .67));
   asker.visible = bot.visible = crew > .01; asker.scale.setScalar(Math.max(.001, 1.6 * crew)); bot.scale.setScalar(Math.max(.001, 1.7 * crew));
-  const askAnim = seg(p, .82, .86); stand(asker); asker.userData.arms[1].rotation.x = -2.4 * askAnim + .15 * Math.sin(time * 5) * askAnim;
+  const askAnim = seg(sec, 37.9, 38.55); stand(asker); asker.userData.arms[1].rotation.x = -2.4 * askAnim + .15 * Math.sin(time * 5) * askAnim;
   bot.userData.head.rotation.y = .25 * Math.sin(time * 1.2); bot.position.y = .06 + .06 * Math.sin(time * 2);
   walkers.forEach((w, i) => {
     const on = eb(seg(p, .66 + i * .01, .72 + i * .01)); w.p.visible = on > .01; w.p.scale.setScalar(Math.max(.001, on * 1.3));
@@ -1209,14 +1353,14 @@ function update(P, time) {
   });
 
   /* action de retour vers l'ERP */
-  const act = eio(seg(p, .91, .95));
+  const act = eio(SEC(P, 42.0, 43.0));
   tube.geometry.setDrawRange(0, Math.floor(tubeIdx * clamp(act * 1.05) / 6) * 6); tube.visible = arrow.visible = act > .01; arrow.scale.setScalar(Math.max(.001, clamp((act - .9) * 10)));
 
   /* cartes HTML */
   KEYS.forEach(k => { const g = DEF[k].g; place(UI['tag_' + k], V(g.position.x, g.position.y + 1.0, g.position.z + 3.5), clamp(seg(p, .02, .08)) * (1 - sm(seg(p, .94, .98))) * (MOBILE ? 1 - sm(seg(p, .44, .5)) : 1), 0, 12); });
-  place(UI.q, V(PX, 2.9, PZ), sm(seg(p, .835, .86)) * (1 - sm(seg(p, .955, .975))), -40, -4, .88 + .12 * sm(seg(p, .835, .86)));
-  place(UI.a, V(PX + 1.7, 3.1, PZ + .5), sm(seg(p, .865, .895)) * (1 - sm(seg(p, .955, .975))), 170, -62, .88 + .12 * sm(seg(p, .865, .895)));
-  { const ap = sm(seg(p, .885, .9)) * (1 - sm(seg(p, .955, .975))), pressed = seg(p, .905, .92) > .5;
+  place(UI.q, V(PX, 2.9, PZ), sm(SEC(P, 38.3, 38.9)) * (1 - sm(seg(p, .955, .975))), -40, -4, .88 + .12 * sm(SEC(P, 38.3, 38.9)));
+  place(UI.a, V(PX + 1.7, 3.1, PZ + .5), sm(SEC(P, 40.95, 41.55)) * (1 - sm(seg(p, .955, .975))), 170, -62, .88 + .12 * sm(SEC(P, 40.95, 41.55)));
+  { const ap = sm(SEC(P, 41.4, 41.75)) * (1 - sm(seg(p, .955, .975))), pressed = sec > 41.95;
     place(UI.apv, V(PX + 1.7, 3.1, PZ + .5), ap, 150, 52, pressed ? 1.0 : .94 + .06 * Math.sin(time * 6));
     { const want = pressed ? T('approved') : T('approve'); if (apb && apb.dataset.s !== want) { apb.textContent = want; apb.dataset.s = want; } if (apb) apb.classList.toggle('done', pressed); } }
 
