@@ -120,6 +120,8 @@ main.rest{position:relative;z-index:2}
 .src{display:flex;gap:6px;margin-top:8px}
 .src i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#fff;background:var(--c);font-style:normal}
 .src svg{width:15px;height:15px}
+.src i.k{border-radius:8px}
+.src .sep{width:1px;margin:3px 3px;background:#d9d6cc}
 .still #cards{display:none}
 @media (max-width:760px){.right{gap:6px}.lang button{padding:7px 10px}}
 
