@@ -14,10 +14,10 @@ const root = document.documentElement;
 const canvas = document.getElementById('gl');
 let renderer;
 try {
-  renderer = new THREE.WebGLRenderer({canvas, antialias: !MOBILE, alpha: true, preserveDrawingBuffer: Q.has('cap'), powerPreference: 'high-performance'});
+  renderer = new THREE.WebGLRenderer({canvas, antialias: !MOBILE || Q.has('pr'), alpha: true, preserveDrawingBuffer: Q.has('cap'), powerPreference: 'high-performance'});
 } catch (e) { root.classList.add('nogl'); throw e; }
 /* Résolution plafonnée puis ajustée en continu selon le temps réel d'une image (voir boucle). */
-const PR_MAX = Math.min(devicePixelRatio || 1, MOBILE ? 1.25 : 1.5), PR_MIN = MOBILE ? .7 : .8;
+const PR_MAX = Q.has('pr') ? parseFloat(Q.get('pr')) : Math.min(devicePixelRatio || 1, MOBILE ? 1.25 : 1.5), PR_MIN = MOBILE ? .7 : .8;
 let PR = PR_MAX;
 renderer.setPixelRatio(PR);
 renderer.shadowMap.enabled = true;
@@ -702,6 +702,9 @@ KEYS.forEach(k => { UI['tag_' + k] = mk('', 'tag', C[k]); });
 UI.q = mk('', 'q tailR', '#1f2d4f');
 UI.a = mk('', 'a tailL', '#5c6bc0');
 UI.apv = mk('', 'apv nostem', '#2e9e68');
+/* plan final : ce qu'on voit, nommé */
+UI.lTwin = mk('', 'layer', '#3f5bd9', 26);
+UI.lSocle = mk('', 'layer nostem', '#26346e');
 let apb = null;
 const SRC = {
   erp: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 8v8M9.5 10.2c.7-.8 4.3-.9 4.8.6.5 1.8-4.8.9-4.6 3 .1 1.5 3.9 1.6 4.8.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
@@ -711,6 +714,8 @@ const SRC = {
 function renderCards() {
   KEYS.forEach(k => { UI['tag_' + k].textContent = T('tag.' + k); });
   UI.q.textContent = T('q');
+  UI.lTwin.innerHTML = `<b>${T('layer.twin')}</b><span>${T('layer.twin.s')}</span>`;
+  UI.lSocle.innerHTML = `<b>${T('layer.socle')}</b><span>${T('layer.socle.s')}</span>`;
   UI.a.innerHTML = `<div class="ans"><i class="bolt">⚡</i><span>${T('a')}</span></div><div class="src">${['erp', 'crm', 'pt'].map(k => `<i style="--c:${C[k]}">${SRC[k]}</i>`).join('')}</div>`;
   UI.apv.innerHTML = '<span class="apb"></span>'; apb = UI.apv.querySelector('.apb'); apb.dataset.s = '';
 }
@@ -761,13 +766,13 @@ function resize() {
 }
 resize(); addEventListener('resize', resize);
 /* écran large : le titre occupe le tiers gauche, la scène doit tenir dans les deux tiers droits */
-function wideFit(p) { return 1.08 + .17 * (1 - sm(seg(p, .26, .34))) + .1 * Math.sin(Math.PI * seg(p, .26, .38)) + .3 * Math.sin(Math.PI * seg(p, .40, .56)); }
+function wideFit(p) { return (1 - .16 * sm(seg(p, .925, .965))) * (1.08 + .17 * (1 - sm(seg(p, .26, .34))) + .1 * Math.sin(Math.PI * seg(p, .26, .38)) + .3 * Math.sin(Math.PI * seg(p, .40, .56))); }
 function distFactor(p) { return ASP < 1.35 ? Math.pow(1.35 / ASP, lerp(lerp(.42, .7, sm(seg(p, .26, .4))), .46, sm(seg(p, .52, .62)))) : 1; }
 
 /* ------------------------------------------------------------------ mise à jour de la scène */
 const _v = new THREE.Vector3();
 function place(el, pos, op, dx = 0, dy = 0, sc = 1) {
-  if (op < .01 || (MOBILE && !el.classList.contains('tag'))) { el.style.opacity = 0; return; }
+  if (op < .01 || (MOBILE && !el.classList.contains('tag') && !el.classList.contains('layer'))) { el.style.opacity = 0; return; }
   const p = _v.copy(pos).project(camera);
   el.style.transform = `translate(${((p.x + 1) / 2 * W + dx).toFixed(1)}px,${((1 - p.y) / 2 * H + dy).toFixed(1)}px) translate(-50%,-100%) scale(${sc.toFixed(3)})`;
   el.style.opacity = op.toFixed(3);
@@ -893,7 +898,7 @@ function update(P, time) {
     KEYS.forEach((k, i) => { const arr = arrive(k), up = eo(seg(P, arr, arr + .05)); const bm = beams[k]; bm.scale.set(1, Math.max(.001, up), 1); bm.visible = up > .01; bm.material.opacity = sm(seg(P, arr, arr + .03)) * (.62 - .3 * sm(seg(P, .8, .92)) + .08 * Math.sin(time * 3 + i)) * (1 - .75 * sm(seg(P, .9, .95))); });
     { const up = eo(seg(P, .60, .66)); coreBeam.scale.set(1, Math.max(.001, up), 1); coreBeam.visible = up > .01; coreBeam.material.opacity = up * (.3 + .55 * Math.sin(Math.PI * seg(P, .70, .80))); }
     /* le jumeau se materialise */
-    { const reveal = eo(seg(P, .565, .62)); twin.visible = reveal > .01; const fin_ = sm(seg(P, .925, .955)); twin.scale.setScalar(Math.max(.001, 1.2 * (.35 + .65 * reveal) * (1 - .22 * fin_))); twin.position.y = TWY - (1 - reveal) * 6 - 4.5 * fin_;
+    { const reveal = eo(seg(P, .565, .62)); twin.visible = reveal > .01; const fin_ = sm(seg(P, .925, .955)); twin.scale.setScalar(Math.max(.001, 1.2 * (.35 + .65 * reveal))); twin.position.y = TWY - (1 - reveal) * 6 - 1.2 * fin_;
       glassMat.opacity = .36 * reveal; twGrid.material.opacity = .6 * reveal;
       const pulseT = Math.sin(Math.PI * seg(P, .70, .78)); twFrame.material.emissiveIntensity = reveal * (.55 + .7 * pulseT);
       KEYS.forEach((k, i) => {
@@ -936,7 +941,7 @@ function update(P, time) {
       if (b.sp.visible) {
         if (idx !== b.last) { b.sp.material.map = bTex(ICONS[(idx + b.i + b.j * 2) % 4], b.k); b.last = idx; }
         b.sp.position.set(o.g.position.x + (b.j - 1) * 2.4, o.g.position.y + 6.4 + ph * 4.2, o.g.position.z + 1.0);
-        b.sp.material.opacity = Math.sin(Math.PI * ph) * lit * (1 - sm(seg(P, .91, .95))); b.sp.scale.setScalar(5.0 * (.5 + .5 * eb(seg(ph, 0, .22))));
+        b.sp.material.opacity = Math.sin(Math.PI * ph) * lit * (1 - sm(seg(P, .815, .845))); b.sp.scale.setScalar(5.0 * (.5 + .5 * eb(seg(ph, 0, .22))));
       }
     });
   }
@@ -969,7 +974,7 @@ function update(P, time) {
   });
   [[mClient, 'client', -1], [mJob, 'job', 1]].forEach(([m, kd, sg]) => {
     const f = eb(seg(p, .775, .805)); m.visible = f > .01; m.scale.setScalar(Math.max(.001, f));
-    m.position.y = 18.0 - 3.6 * sm(seg(P, .925, .955)) + .22 * Math.sin(time * 1.5 + sg); m.quaternion.copy(cur);
+    m.position.y = 18.0 - 1.2 * sm(seg(P, .925, .955)) + .22 * Math.sin(time * 1.5 + sg); m.quaternion.copy(cur);
   });
 
   /* flux continus après fusion */
@@ -1006,6 +1011,8 @@ function update(P, time) {
     place(UI.apv, V(PX + 1.7, 3.1, PZ + .5), ap, 150, 52, pressed ? 1.0 : .94 + .06 * Math.sin(time * 6));
     { const want = pressed ? T('approved') : T('approve'); if (apb && apb.dataset.s !== want) { apb.textContent = want; apb.dataset.s = want; } if (apb) apb.classList.toggle('done', pressed); } }
 
+  { const lo = sm(seg(P, .955, .985)); place(UI.lTwin, V(0, twin.position.y + 1.2, 0), lo, 0, -6);
+    place(UI.lSocle, V(0, -1.4, 13.2), sm(seg(P, .97, 1)), MOBILE ? 0 : 300, MOBILE ? 92 : 20, 1); }
   /* chapitres de texte */
   chaps.forEach(c => {
     if (c.id === 'top') { c.style.opacity = 1; c.style.transform = ''; c.classList.add('on'); return; }
@@ -1053,7 +1060,7 @@ function loop(now) {
   const live = onScreen && !document.hidden;
   if (live && playing && !Q.has('freeze')) { filmT += dt; if (filmT > FILM + HOLD) filmT = 0; }
   P = clamp(filmT / FILM);
-  stage.style.setProperty('--cut', filmCut(filmT).toFixed(3));
+  if (!Q.has('vidcap')) stage.style.setProperty('--cut', filmCut(filmT).toFixed(3));
   if (live && !Q.has('freeze')) { draw(P, (now - T0) / 1000); if (frames > 10 && ms < 200) adapt(ms); }
   frames++; if (frames === 8) window.__ready = true;
   requestAnimationFrame(loop);

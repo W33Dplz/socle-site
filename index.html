@@ -242,6 +242,11 @@
         <p data-i="s3.p"></p>
       </li>
     </ol>
+    <div class="road rv">
+      <div class="rd now"><span class="rd-k" data-i="road.now.k"></span><h3 data-i="road.now.h"></h3><p data-i="road.now.p"></p></div>
+      <div class="rd-ar" aria-hidden="true"><i></i></div>
+      <div class="rd next"><span class="rd-k" data-i="road.next.k"></span><h3 data-i="road.next.h"></h3><p data-i="road.next.p"></p></div>
+    </div>
   </div>
 </section>
 
@@ -357,7 +362,10 @@
   import './assets/i18n.js';
   import('./assets/home.js').catch(function(e){ console.error(e); document.documentElement.classList.remove('anim'); });
   if (!document.documentElement.classList.contains('reduced')) {
-    import('./assets/scene.js').catch(function(e){ console.error(e); document.documentElement.classList.add('nogl'); });
+    /* mobile : vidéo rendue à l'avance (nette, démarrage immédiat) ; grand écran : 3D en direct */
+    var vid = innerWidth < 760 && !/[?&](live|t)=?/.test(location.search);
+    if (vid) document.documentElement.classList.add('vid');
+    import(vid ? './assets/film-video.js' : './assets/scene.js').catch(function(e){ console.error(e); document.documentElement.classList.add('nogl'); });
   }
 </script>
 </body>
