@@ -94,7 +94,7 @@ if (hasIO) {
 
   /* Les boucles (agitation, flux de données, pulsation) ne tournent que pendant que le bloc est à l'écran. */
   const live = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('live', e.isIntersecting)), { rootMargin: '8% 0px' });
-  $$('.vs, .s3').forEach(el => live.observe(el));
+  $$('.vs, .s3, .cs').forEach(el => live.observe(el));
 }
 
 /* 4. Pour qui : une bande de métiers, avec un repère qui glisse d'un métier à l'autre. */
@@ -156,4 +156,40 @@ if (hasIO) {
     set(Math.max(-10, Math.min(10, dx * 0.16)), Math.max(-6, Math.min(6, dy * 0.2)));
   });
   area.addEventListener('pointerleave', () => set(0, 0));
+})();
+
+/* 6. Schémas animés de « Sous le capot » : chaque .fx est une séquence (data-t = instants des étapes s1, s2… en ms, data-end = durée du cycle).
+   Elle ne tourne que pendant que le schéma est à l'écran. Mouvement réduit ou sans IntersectionObserver : l'état final s'affiche, immobile (pas de .seq). */
+(function sequences() {
+  const figs = $$('.fx');
+  if (!figs.length || reduce.matches || !hasIO) return;
+  const STEPS = ['s1', 's2', 's3', 's4', 's5', 's6', 's7'];
+  const ctl = new Map();
+  figs.forEach(f => {
+    f.classList.add('seq');
+    const t = f.dataset.t.split(',').map(Number), end = +f.dataset.end;
+    let timers = [], seen = false;
+    const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+    const stop = () => { timers.forEach(clearTimeout); timers = []; };
+    const play = () => {
+      stop();
+      f.classList.remove('rst');
+      t.forEach((ms, i) => later(() => f.classList.add('s' + (i + 1)), ms));
+      later(() => { f.classList.add('rst'); f.classList.remove(...STEPS); later(play, 800); }, end);
+    };
+    ctl.set(f, {
+      start() {
+        stop();
+        if (seen) { f.classList.add('rst'); f.classList.remove(...STEPS); later(play, 600); }
+        else { seen = true; later(play, 400); }
+      },
+      stop
+    });
+  });
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    const f = e.target;
+    f.classList.toggle('live', e.isIntersecting);
+    if (e.isIntersecting) ctl.get(f).start(); else ctl.get(f).stop();
+  }), { threshold: 0.3 });
+  figs.forEach(f => io.observe(f));
 })();
