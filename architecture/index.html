@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%232f4b9c%22/%3E%3Crect x=%2214%22 y=%2236%22 width=%2236%22 height=%2214%22 rx=%227%22 fill=%22%23fff%22/%3E%3C/svg%3E">
+<title>Architecture | Socle Twin</title>
+<meta name="description" content="The ontology-first architecture of Socle Twin, from read-only ingestion to a multi-tenant MCP gateway, and where Claude does the work.">
+<meta name="color-scheme" content="light">
+<link rel="canonical" href="https://getsocle.com/architecture/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Architecture | Socle Twin">
+<meta property="og:description" content="An ontology-first digital twin of a small company, designed to be served to any AI agent through one multi-tenant MCP gateway.">
+<meta property="og:url" content="https://getsocle.com/architecture/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,500;0,600;0,700;1,500&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+/* Architecture page: reuses the site tokens, header and footer (../assets/style.css). Everything else is prefixed ar-. */
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+.ar-skip{position:absolute;left:12px;top:8px;z-index:50;background:var(--ink);color:#fff;padding:10px 16px;border-radius:999px;text-decoration:none;font-weight:600;transform:translateY(-300%)}
+.ar-skip:focus{transform:none}
+.ar-wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+.ar-hero{padding:clamp(112px,15vw,168px) 0 clamp(40px,6vw,72px)}
+.ar-kick{font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--brand)}
+.ar-hero h1{font-family:var(--serif);font-weight:600;font-size:clamp(2.4rem,6.4vw,4.6rem);line-height:1.02;letter-spacing:-.03em;margin:.35em 0 .4em;max-width:15ch;text-wrap:balance}
+.ar-lead{font-size:clamp(1.1rem,1.7vw,1.35rem);line-height:1.55;color:#445068;max-width:56ch;margin:0 0 18px;text-wrap:balance}
+.ar-ver{font-size:.9rem;color:#566078;margin:0}
+.ar-tocwrap{margin:28px 0 0}
+.ar-tocwrap>summary{display:none}
+.ar-toc{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0}
+.ar-toc a{font-size:.88rem;font-weight:500;color:var(--ink);text-decoration:none;background:rgba(255,255,255,.8);border:1px solid #d6dbe9;border-radius:999px;padding:7px 14px;transition:background-color .15s}
+@media (hover:hover) and (pointer:fine){.ar-toc a:hover{background:#eef1f9}}
+
+.ar-main{position:relative;z-index:2;background:#fff;border-radius:32px 32px 0 0;box-shadow:0 -14px 40px rgba(40,50,80,.06);font-size:1.0625rem;--mute:#566078}
+.ar-sec{padding:clamp(44px,5.6vw,80px) 0;border-top:1px solid #e7eaf3;scroll-margin-top:72px}
+.ar-sec:first-child{border-top:0}
+.ar-sh{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:baseline;margin:0 0 16px}
+.ar-num{font:600 .95rem/1 var(--sans);color:var(--brand);letter-spacing:.06em;font-variant-numeric:tabular-nums}
+.ar-sh h2{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,3.6vw,2.9rem);line-height:1.08;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.ar-sh .ar-chip{grid-column:2;justify-self:start}
+.ar-status{font-size:.98rem;line-height:1.55;color:var(--mute);margin:0 0 26px;max-width:72ch;padding-left:14px;border-left:3px solid #d6dbe9}
+.ar-sec p,.ar-sec li{max-width:72ch;text-wrap:pretty}
+.ar-sec p{margin:0 0 1.05em}
+.ar-sec h3{font:600 1.15rem/1.3 var(--sans);letter-spacing:-.01em;margin:2em 0 .6em}
+.ar-sec ul,.ar-sec ol{padding-left:1.25em;margin:0 0 1.2em}
+.ar-sec li{margin:.5em 0;padding-left:.2em}
+.ar-sec li::marker{color:var(--brand);font-weight:700}
+.ar-sec code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em;background:#f1f4fb;padding:1px 6px;border-radius:6px;overflow-wrap:anywhere}
+.ar-sec a{overflow-wrap:anywhere}
+
+.ar-chip{display:inline-flex;align-items:center;gap:7px;font:700 .72rem/1 var(--sans);letter-spacing:.05em;text-transform:uppercase;padding:6px 11px;border-radius:999px;border:1px solid;white-space:nowrap}
+.ar-chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.is-built{color:#1f6f4b;background:#e6f5ed;border-color:#bfe3cf}
+.is-proto{color:#2f4b9c;background:#e9eefb;border-color:#c5d3f5}
+.is-design{color:#855510;background:#fdf3e1;border-color:#f1d9a8}
+.ar-key{list-style:none;padding:0!important;margin:0 0 18px!important;display:grid;gap:10px}
+.ar-key li{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0!important;padding:0!important}
+.ar-key .ar-chip{min-width:136px;justify-content:flex-start}
+.ar-key li>span:last-child{flex:1 1 220px;font-size:.98rem}
+
+.ar-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:30px 0 8px}
+.ar-tile{background:#fff;border:1px solid #d6dbe9;border-top:3px solid var(--c);border-radius:16px;padding:18px 18px 16px;box-shadow:0 8px 22px rgba(40,50,80,.06)}
+.ar-tile h3{margin:0 0 6px;font-size:1.02rem}
+.ar-tile p{margin:0;font-size:.94rem;line-height:1.5;color:var(--mute)}
+
+.ar-fig{margin:30px 0;background:#fbfaf7;border:1px solid #d6dbe9;border-radius:22px;padding:clamp(8px,1.6vw,16px)}
+.ar-fig svg{display:block;width:100%;height:auto}
+.ar-svg-n{display:none;max-width:480px;margin:0 auto}
+.ar-fig figcaption{font-size:.9rem;line-height:1.5;color:var(--mute);margin:12px 6px 4px}
+@media (max-width:899px){.ar-svg-w{display:none}.ar-svg-n{display:block}}
+
+.ar-tw{margin:26px 0;border:1px solid #d6dbe9;border-radius:18px;overflow:hidden;background:#fff}
+.ar-tbl{width:100%;border-collapse:collapse;font-size:.95rem;line-height:1.5}
+.ar-tbl th,.ar-tbl td{padding:14px 16px;text-align:left;vertical-align:top;border-bottom:1px solid #e7eaf3}
+.ar-tbl thead th{font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);background:#f6f8fd;border-bottom:1px solid #d6dbe9}
+.ar-tbl tbody th{font-weight:600;width:19%}
+.ar-tbl.c2 tbody th{width:55%}
+.ar-tbl tbody tr:last-child>*{border-bottom:0}
+@media (max-width:719px){
+  .ar-tbl,.ar-tbl tbody,.ar-tbl tr,.ar-tbl th,.ar-tbl td{display:block;width:auto!important}
+  .ar-tbl{font-size:.9rem;line-height:1.45}
+  .ar-tbl thead{position:absolute;clip:rect(0 0 0 0);clip-path:inset(50%);width:1px;height:1px;overflow:hidden}
+  .ar-tbl tr{padding:11px 14px;border-bottom:1px solid #e7eaf3}
+  .ar-tbl tr:last-child{border-bottom:0}
+  .ar-tbl th,.ar-tbl td{padding:0;border:0!important}
+  .ar-tbl tbody th{font-size:.98rem;margin-bottom:2px}
+  .ar-tbl td{margin-top:3px}
+  .ar-tbl td::before{content:attr(data-l) " ";display:inline;font-size:.66rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mute);margin-right:5px}
+  .ar-tbl.tbl-dp td[data-l="Design"]{color:var(--mute);font-size:.84rem;line-height:1.38;margin-top:0}
+  .ar-tbl.tbl-dp td[data-l="Design"]::before{display:none}
+  .ar-tbl.tbl-model tr{display:grid;grid-template-columns:1fr auto;column-gap:10px;align-items:baseline}
+  .ar-tbl.tbl-model td{grid-column:1/-1}
+  .ar-tbl.tbl-model td[data-l="Model"]{grid-column:2;grid-row:1;margin:0;font-weight:700;color:var(--brand)}
+  .ar-tbl.tbl-model td[data-l="Model"]::before,.ar-tbl.tbl-model td[data-l="Planned role"]::before{display:none}
+  .ar-tbl.tbl-model td[data-l="Why"]{display:none}
+}
+
+.ar-defs{margin:0 0 8px;border:1px solid #d6dbe9;border-radius:18px;overflow:hidden}
+.ar-defs>div{display:grid;grid-template-columns:minmax(120px,190px) 1fr;gap:6px 18px;padding:13px 18px;border-bottom:1px solid #e7eaf3}
+.ar-defs>div:last-child{border-bottom:0}
+.ar-defs dt{font-weight:600}
+.ar-defs dd{margin:0;color:#2e374c}
+@media (max-width:560px){.ar-defs>div{grid-template-columns:1fr;gap:2px}}
+
+.ar-rec{margin:26px 0;border-radius:18px;border:1px solid #c5d3f5;background:#f6f8ff;overflow:hidden;max-width:720px}
+.ar-rec-h{font:700 .74rem/1 var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--brand);padding:13px 18px;background:#e9eefb;border-bottom:1px solid #c5d3f5}
+.ar-rec dl{margin:0}
+.ar-rec dl>div{display:grid;grid-template-columns:130px 1fr;gap:6px 14px;padding:10px 18px;border-bottom:1px dashed #d5def5}
+.ar-rec dl>div:last-child{border-bottom:0}
+.ar-rec dt{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86rem;color:var(--brand);font-weight:600}
+.ar-rec dd{margin:0;font-size:.95rem}
+@media (max-width:480px){.ar-rec dl>div{grid-template-columns:1fr;gap:1px}}
+
+.ar-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:0 0 26px}
+.ar-col{border:1px solid #d6dbe9;border-radius:22px;padding:24px 24px 12px;background:#fff}
+.ar-col.is-future{background:#f6f8ff;border-color:#c5d3f5}
+.ar-col .ar-kick{display:block}
+.ar-sec .ar-col h3{margin:.3em 0 .8em;font-family:var(--serif);font-weight:600;font-size:1.6rem;letter-spacing:-.01em}
+.ar-col p{font-size:1rem}
+@media (max-width:820px){.ar-cols{grid-template-columns:1fr}}
+
+footer .ar-fwrap{max-width:1040px}
+footer p a{overflow-wrap:anywhere}
+@media (max-width:480px){
+  .ar-wrap{padding:0 16px}
+  .ar-main{font-size:.9375rem;line-height:1.5}
+  .ar-sec{padding:26px 0}
+  .ar-sh{margin-bottom:10px;grid-template-areas:"n c" "t t";grid-template-columns:auto 1fr;gap:4px 12px;align-items:center}
+  .ar-sh .ar-num{grid-area:n}
+  .ar-sh .ar-chip{grid-area:c;grid-column:auto}
+  .ar-sh h2{grid-area:t}
+  .ar-status{font-size:.88rem;line-height:1.45;margin-bottom:18px}
+  .ar-sec p{margin-bottom:.65em}
+  .ar-sec h3{margin:1.25em 0 .35em;font-size:1.05rem}
+  .ar-sec li{margin:.28em 0}
+  .ar-hero{padding-top:92px;padding-bottom:28px}
+  .ar-tocwrap{margin-top:18px}
+  .ar-tocwrap>summary{display:list-item;cursor:pointer;font-weight:600;font-size:.9rem;color:var(--brand);padding:4px 0}
+  .ar-toc{gap:6px;margin-top:10px}
+  .ar-toc a{font-size:.8rem;padding:5px 11px}
+  .ar-tiles{display:none}
+  .ar-tile{padding:12px 12px 10px}
+  .ar-tile h3{font-size:.92rem;margin-bottom:3px}
+  .ar-tile p{font-size:.82rem;line-height:1.4}
+  .ar-key{gap:6px}
+  .ar-key li>span:last-child{font-size:.9rem;flex-basis:100%}
+  .ar-fig{margin:18px 0;padding:6px}
+  .ar-tw{margin:16px 0}
+  .ar-defs>div{display:block;padding:8px 14px}
+  .ar-defs dt{display:inline;font-weight:700}
+  .ar-defs dt::after{content:". "}
+  .ar-defs dd{display:inline}
+  .ar-rec{margin:16px 0}
+  .ar-rec dl>div{grid-template-columns:104px 1fr;padding:7px 14px;gap:2px 10px}
+  .ar-rec dd{font-size:.88rem}
+  .ar-rec dt{font-size:.8rem}
+  .ar-col{padding:16px 16px 4px}
+  .ar-sec .ar-col h3{font-size:1.35rem}
+  .ar-col p{font-size:.94rem}
+}
+</style>
+</head>
+<body>
+<a class="ar-skip" href="#main">Skip to content</a>
+<header class="top solid">
+  <a class="brand" href="../"><i></i>Socle Twin</a>
+  <div class="right">
+    <button type="button" class="burger" aria-expanded="false" aria-controls="menu" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+  <div id="menu" class="menu">
+    <nav class="main" aria-label="Site">
+      <a href="../#how">How it works</a>
+      <a href="../#twin">Under the hood</a>
+      <a href="../#cases">Who it is for</a>
+      <a href="../#faq">FAQ</a>
+      <a href="./" aria-current="page">Architecture</a>
+      <a class="cta" href="mailto:info@getsocle.com">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<div class="ar-hero">
+  <div class="ar-wrap">
+    <span class="ar-kick">Technical dossier</span>
+    <h1>Socle Twin architecture</h1>
+    <p class="ar-lead">How Socle Twin is designed to build, update and serve an ontology-first digital twin of a small company, and where Claude does the work.</p>
+    <p class="ar-ver">Version 1, October 2026</p>
+    <details class="ar-tocwrap" open><summary>On this page</summary><nav class="ar-toc" aria-label="On this page"><a href="#summary">Summary</a><a href="#data-path">Data path</a><a href="#ontology">Ontology</a><a href="#entity-resolution">Entity resolution</a><a href="#provenance">Provenance</a><a href="#knowledge-base">Knowledge base</a><a href="#gateway">MCP gateway</a><a href="#evals">Evals</a><a href="#claude">Claude’s role</a><a href="#trajectory">Today and 2027</a><a href="#open-questions">Open questions</a></nav></details>
+  </div>
+</div>
+
+<main id="main" class="ar-main">
+<section class="ar-sec" id="summary" aria-labelledby="h-summary"><div class="ar-wrap"><div class="ar-sh"><span class="ar-num" aria-hidden="true">01</span><h2 id="h-summary">Summary</h2></div>
+<p>Socle Twin is an ontology-first digital twin of a small or mid-sized company, designed in two parts that point at each other. A typed graph holds what the company is: clients, projects, invoices, people, documents and the links between them. A structured knowledge base holds how it works: rules, procedures, source documents and decisions, attached to the graph objects they govern.</p>
+<p>Ingestion connectors are designed to read the tools the company already runs, with read-only credentials. Claude is meant to do the reading, typing and matching, and people will validate what matters. Any agent, Claude or another, will reach the twin through one multi-tenant MCP gateway. The gateway is specified as read-only by default: a write exists only as a proposed action that a person approves.</p>
+<p>The company’s tools stay the system of record. Each value is designed to carry its provenance, each version to be dated and validated by a person, and each answer to cite its sources or state what is missing.</p>
+<p>Nothing described here runs end to end at a client today. What exists is a set of parts built by hand with Claude, listed in section 10.</p>
+<div class="ar-tiles"><div class="ar-tile" style="--c:#E8A33D"><h3>Closed typology</h3><p>A finite, versioned set of object and link types per company. Extraction should emit only what the schema allows.</p></div><div class="ar-tile" style="--c:#3FB27F"><h3>Read-only ingestion</h3><p>Ingestion connectors will hold read credentials only. Any write will take a separate path and start after a person approves.</p></div><div class="ar-tile" style="--c:#4A8CF2"><h3>Provenance per field</h3><p>Source, method, validity dates and validation status are meant to travel with each value.</p></div><div class="ar-tile" style="--c:#8B6BEA"><h3>Reversible</h3><p>Merges, versions and model switches should keep their lineage, so each can be audited or undone.</p></div></div>
+<h3>How to read the status chips</h3>
+<p>Sections 2 to 9 each carry a status chip. The plug-and-play platform we are aiming for appears only in section 10, in the future tense.</p>
+<ul class="ar-key"><li><span class="ar-chip is-proto">Prototyped</span><span>Done by hand with Claude on a client engagement, a prototype or synthetic data. It does not run as a system yet.</span></li><li><span class="ar-chip is-design">In design</span><span>Specified. Not built.</span></li></ul></div></section>
+<section class="ar-sec" id="data-path" aria-labelledby="h-data-path"><div class="ar-wrap"><div class="ar-sh"><span class="ar-num" aria-hidden="true">02</span><h2 id="h-data-path">Data path: from source system to agent</h2><span class="ar-chip is-proto">Prototyped</span></div><p class="ar-status">A read-only adapter feeding a canonical model ran on one prototype. The rest of the path is a design.</p>
+<p>The path has eight stages and runs in one direction. Ingestion is designed to be read-only, so no stage after the connectors can write to a source system. Any write goes through a separate, approval-gated path (section 7). Each stage is meant to be replayable from the one before it. When a source changes, the design calls for a new snapshot and a new graph version (section 5).</p>
+<figure class="ar-fig" id="fig-data-path"><div class="ar-svg-w"><svg class="dg" viewBox="0 0 960 364" role="img" aria-labelledby="dp-w-ti dp-w-de" preserveAspectRatio="xMidYMid meet">
+<title id="dp-w-ti">Data path of Socle Twin</title><desc id="dp-w-de">Eight stages in one direction: company tools, read-only connectors, raw snapshots, Claude extraction, typed canonical graph, knowledge base, MCP gateway, agents and clients. A person reviews candidates between extraction and the graph.</desc>
+<style>.dg text{font-family:'Schibsted Grotesk','Helvetica Neue',Arial,sans-serif;fill:#1d2433}
+.dg .t{font-size:14.5px;font-weight:600}
+.dg .s{font-size:12.5px;fill:#566078}
+.dg .h{font-size:11px;font-weight:700;letter-spacing:.09em;fill:#566078}
+.dg .lb{font-size:11.5px;font-weight:600;fill:#566078}
+.dg .pl{font-size:11.5px;font-weight:700}
+.dg .bg{fill:#fbfaf7}
+.dg .bx{fill:#fff;stroke:#bcc6e2;stroke-width:1.4}
+.dg .cl{fill:#e9eefb;stroke:#2f4b9c;stroke-width:1.7}
+.dg .hu{fill:#e6f5ed;stroke:#2e9e68;stroke-width:1.7}
+.dg .da{fill:#fdf3e1;stroke:#d9922b;stroke-width:1.5}
+.dg .dim{fill:#f6f7fb;stroke:#d5dbeb;stroke-width:1.2;stroke-dasharray:4 4}
+.dg .dim text,.dg text.dimt{fill:#8a93a8}
+.dg .pn{fill:#f6f7fb;stroke:#aab4d2;stroke-width:1.3}
+.dg .wall{fill:none;stroke:#aab4d2;stroke-width:1.3;stroke-dasharray:5 4}
+.dg .ar{fill:none;stroke:#2f4b9c;stroke-width:1.7}
+.dg .ard{fill:none;stroke:#b5bed8;stroke-width:1.5;stroke-dasharray:4 4}
+.dg .arh{fill:none;stroke:#2e9e68;stroke-width:1.7}
+.dg .badge{fill:#2f4b9c}
+.dg .badge-t{font-size:11px;font-weight:700;fill:#fff;text-anchor:middle}
+.dg .pill-cl{fill:#e9eefb;stroke:#9db0e6}
+.dg .pill-hu{fill:#e6f5ed;stroke:#8fd0b0}
+.dg .pill-da{fill:#fdf3e1;stroke:#ecc98c}
+.dg .pill-bx{fill:#fff;stroke:#bcc6e2}
+.dg .pill-hu-t{fill:#1f6f4b}
+.dg .pill-cl-t{fill:#2f4b9c}
+.dg .ctr{text-anchor:middle}
+.dg .mid{text-anchor:middle}
+</style>
+<defs><marker id="dp-w-ah" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.8L9.6 5L0 9.2z" fill="#2f4b9c"/></marker><marker id="dp-w-ahh" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.8L9.6 5L0 9.2z" fill="#2e9e68"/></marker><marker id="dp-w-ahd" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.8L9.6 5L0 9.2z" fill="#b5bed8"/></marker></defs>
+<rect class="bg" x="0" y="0" width="960" height="364" rx="16"/>
+<text class="h" x="20.0" y="30.0">READ AND EXTRACT: read-only, replayable</text>
+<rect class="bx" x="20.0" y="48.0" width="200.0" height="84.0" rx="12"/>
+<text x="120.0" y="77.5" class="t ctr">Company tools</text>
+<text x="120.0" y="96.5" class="s ctr">ERP, CRM, mail, documents,</text>
+<text x="120.0" y="112.0" class="s ctr">spreadsheets: unchanged</text>
+<circle class="badge" cx="30.0" cy="45.0" r="10.5"/>
+<text class="badge-t" x="30.0" y="49.0">1</text>
+<rect class="bx" x="260.0" y="48.0" width="200.0" height="84.0" rx="12"/>
+<text x="360.0" y="77.5" class="t ctr">Read-only connectors</text>
+<text x="360.0" y="96.5" class="s ctr">one adapter per source type,</text>
+<text x="360.0" y="112.0" class="s ctr">read scopes only</text>
+<circle class="badge" cx="270.0" cy="45.0" r="10.5"/>
+<text class="badge-t" x="270.0" y="49.0">2</text>
+<rect class="da" x="500.0" y="48.0" width="200.0" height="84.0" rx="12"/>
+<text x="600.0" y="77.5" class="t ctr">Raw snapshots</text>
+<text x="600.0" y="96.5" class="s ctr">immutable, hashed,</text>
+<text x="600.0" y="112.0" class="s ctr">replayable</text>
+<circle class="badge" cx="510.0" cy="45.0" r="10.5"/>
+<text class="badge-t" x="510.0" y="49.0">3</text>
+<rect class="cl" x="740.0" y="48.0" width="200.0" height="84.0" rx="12"/>
+<text x="840.0" y="77.5" class="t ctr">Extraction</text>
+<text x="840.0" y="96.5" class="s ctr">schema-validated candidates,</text>
+<text x="840.0" y="112.0" class="s ctr">pointers to source spans</text>
+<circle class="badge" cx="750.0" cy="45.0" r="10.5"/>
+<text class="badge-t" x="750.0" y="49.0">4</text>
+<path class="ar" d="M220.0 90.0 L258.0 90.0" marker-end="url(#dp-w-ah)"/>
+<path class="ar" d="M460.0 90.0 L498.0 90.0" marker-end="url(#dp-w-ah)"/>
+<path class="ar" d="M700.0 90.0 L738.0 90.0" marker-end="url(#dp-w-ah)"/>
+<path class="ar" d="M840.0 132.0 L840.0 160.0 L120.0 160.0 L120.0 182.0" marker-end="url(#dp-w-ah)"/>
+<rect class="pill-hu" x="345.0" y="149.0" width="270.0" height="22" rx="11" stroke-width="1.2"/>
+<text class="pl pill-hu-t ctr" x="480.0" y="164.2">human review queue for uncertain cases</text>
+<rect class="da" x="20.0" y="184.0" width="200.0" height="84.0" rx="12"/>
+<text x="120.0" y="213.5" class="t ctr">Typed canonical graph</text>
+<text x="120.0" y="232.5" class="s ctr">entity resolution, versioned,</text>
+<text x="120.0" y="248.0" class="s ctr">provenance on every field</text>
+<circle class="badge" cx="30.0" cy="181.0" r="10.5"/>
+<text class="badge-t" x="30.0" y="185.0">5</text>
+<rect class="da" x="260.0" y="184.0" width="200.0" height="84.0" rx="12"/>
+<text x="360.0" y="213.5" class="t ctr">Knowledge base</text>
+<text x="360.0" y="232.5" class="s ctr">rules, procedures, documents,</text>
+<text x="360.0" y="248.0" class="s ctr">decisions on graph objects</text>
+<circle class="badge" cx="270.0" cy="181.0" r="10.5"/>
+<text class="badge-t" x="270.0" y="185.0">6</text>
+<rect class="bx" x="500.0" y="184.0" width="200.0" height="84.0" rx="12"/>
+<text x="600.0" y="213.5" class="t ctr">MCP gateway</text>
+<text x="600.0" y="232.5" class="s ctr">multi-tenant, read-only default,</text>
+<text x="600.0" y="248.0" class="s ctr">writes use a separate path</text>
+<circle class="badge" cx="510.0" cy="181.0" r="10.5"/>
+<text class="badge-t" x="510.0" y="185.0">7</text>
+<rect class="bx" x="740.0" y="184.0" width="200.0" height="84.0" rx="12"/>
+<text x="840.0" y="213.5" class="t ctr">Agents and clients</text>
+<text x="840.0" y="232.5" class="s ctr">Claude, other MCP clients,</text>
+<text x="840.0" y="248.0" class="s ctr">staff cockpit</text>
+<circle class="badge" cx="750.0" cy="181.0" r="10.5"/>
+<text class="badge-t" x="750.0" y="185.0">8</text>
+<path class="ar" d="M220.0 226.0 L258.0 226.0" marker-end="url(#dp-w-ah)"/>
+<path class="ar" d="M460.0 226.0 L498.0 226.0" marker-end="url(#dp-w-ah)"/>
+<path class="ar" d="M700.0 226.0 L738.0 226.0" marker-end="url(#dp-w-ah)"/>
+<path class="wall" d="M20 294 H940"/>
+<text x="480.0" y="316.0" class="s ctr">Provenance and the audit trail are designed to follow each record from stage 3 to stage 8. Writes never use this path (see Figure 3).</text>
+<rect class="cl" x="20.0" y="334.0" width="14" height="14" rx="4"/>
+<text class="s" x="40.0" y="345.0">Claude</text>
+<rect class="hu" x="99.8" y="334.0" width="14" height="14" rx="4"/>
+<text class="s" x="119.8" y="345.0">Person</text>
+<rect class="da" x="179.6" y="334.0" width="14" height="14" rx="4"/>
+<text class="s" x="199.6" y="345.0">Data store</text>
+<rect class="bx" x="284.6" y="334.0" width="14" height="14" rx="4"/>
+<text class="s" x="304.6" y="345.0">Deterministic code</text>
+</svg></div><div class="ar-svg-n"><svg class="dg" viewBox="0 0 360 732" role="img" aria-labelledby="dp-n-ti dp-n-de" preserveAspectRatio="xMidYMid meet">
+<title id="dp-n-ti">Data path of Socle Twin</title><desc id="dp-n-de">Eight stages from top to bottom: company tools, read-only connectors, raw snapshots, Claude extraction, typed canonical graph, knowledge base, MCP gateway, agents and clients.</desc>
+<style>.dg text{font-family:'Schibsted Grotesk','Helvetica Neue',Arial,sans-serif;fill:#1d2433}
+.dg .t{font-size:14.5px;font-weight:600}
+.dg .s{font-size:12.5px;fill:#566078}
+.dg .h{font-size:11px;font-weight:700;letter-spacing:.09em;fill:#566078}
+.dg .lb{font-size:11.5px;font-weight:600;fill:#566078}
+.dg .pl{font-size:11.5px;font-weight:700}
+.dg .bg{fill:#fbfaf7}
+.dg .bx{fill:#fff;stroke:#bcc6e2;stroke-width:1.4}
+.dg .cl{fill:#e9eefb;stroke:#2f4b9c;stroke-width:1.7}
+.dg .hu{fill:#e6f5ed;stroke:#2e9e68;stroke-width:1.7}
+.dg .da{fill:#fdf3e1;stroke:#d9922b;stroke-width:1.5}
+.dg .dim{fill:#f6f7fb;stroke:#d5dbeb;stroke-width:1.2;stroke-dasharray:4 4}
+.dg .dim text,.dg text.dimt{fill:#8a93a8}
+.dg .pn{fill:#f6f7fb;stroke:#aab4d2;stroke-width:1.3}
+.dg .wall{fill:none;stroke:#aab4d2;stroke-width:1.3;stroke-dasharray:5 4}
+.dg .ar{fill:none;stroke:#2f4b9c;stroke-width:1.7}
+.dg .ard{fill:none;stroke:#b5bed8;stroke-width:1.5;stroke-dasharray:4 4}
+.dg .arh{fill:none;stroke:#2e9e68;stroke-width:1.7}
+.dg .badge{fill:#2f4b9c}
+.dg .badge-t{font-size:11px;font-weight:700;fill:#fff;text-anchor:middle}
+.dg .pill-cl{fill:#e9eefb;stroke:#9db0e6}
+.dg .pill-hu{fill:#e6f5ed;stroke:#8fd0b0}
+.dg .pill-da{fill:#fdf3e1;stroke:#ecc98c}
+.dg .pill-bx{fill:#fff;stroke:#bcc6e2}
+.dg .pill-hu-t{fill:#1f6f4b}
+.dg .pill-cl-t{fill:#2f4b9c}
+.dg .ctr{text-anchor:middle}
+.dg .mid{text-anchor:middle}
+</style>
+<defs><marker id="dp-n-ah" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.8L9.6 5L0 9.2z" fill="#2f4b9c"/></marker><marker id="dp-n-ahh" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.8L9.6 5L0 9.2z" fill="#2e9e68"/></marker><marker id="dp-n-ahd" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.8L9.6 5L0 9.2z" fill="#b5bed8"/></marker></defs>
+<rect class="bg" x="0" y="0" width="360" height="732" rx="16"/>
+<rect class="bx" x="14.0" y="14.0" width="332.0" height="56.0" rx="12"/>
+<text x="180.0" y="29.5" class="t ctr">Company tools</text>
+<text x="180.0" y="48.5" class="s ctr">ERP, CRM, mail, documents,</text>
+<text x="180.0" y="64.0" class="s ctr">spreadsheets: unchanged</text>
+<circle class="badge" cx="24.0" cy="11.0" r="10.5"/>
+<text class="badge-t" x="24.0" y="15.0">1</text>
+<rect class="bx" x="14.0" y="90.0" width="332.0" height="56.0" rx="12"/>
+<text x="180.0" y="105.5" class="t ctr">Read-only connectors</text>
+<text x="180.0" y="124.5" class="s ctr">one adapter per source type,</text>
+<text x="180.0" y="140.0" class="s ctr">read scopes only</text>
+<circle class="badge" cx="24.0" cy="87.0" r="10.5"/>
+<text class="badge-t" x="24.0" y="91.0">2</text>
+<rect class="da" x="14.0" y="166.0" width="332.0" height="56.0" rx="12"/>
+<text x="180.0" y="189.2" class="t ctr">Raw snapshots</text>
+<text x="180.0" y="208.2" class="s ctr">immutable, hashed, replayable</text>
+<circle class="badge" cx="24.0" cy="163.0" r="10.5"/>
+<text class="badge-t" x="24.0" y="167.0">3</text>
+<rect class="cl" x="14.0" y="242.0" width="332.0" height="56.0" rx="12"/>
+<text x="180.0" y="257.5" class="t ctr">Extraction</text>
+<text x="180.0" y="276.5" class="s ctr">schema-validated candidates,</text>
+<text x="180.0" y="292.0" class="s ctr">pointers to source spans</text>
+<circle class="badge" cx="24.0" cy="239.0" r="10.5"/>
+<text class="badge-t" x="24.0" y="243.0">4</text>
+<rect class="da" x="14.0" y="336.0" width="332.0" height="56.0" rx="12"/>
+<text x="180.0" y="351.5" class="t ctr">Typed canonical graph</text>
+<text x="180.0" y="370.5" class="s ctr">entity resolution, versioned,</text>
+<text x="180.0" y="386.0" class="s ctr">provenance on every field</text>
+<circle class="badge" cx="24.0" cy="333.0" r="10.5"/>
+<text class="badge-t" x="24.0" y="337.0">5</text>
+<rect class="da" x="14.0" y="412.0" width="332.0" height="56.0" rx="12"/>
+<text x="180.0" y="427.5" class="t ctr">Knowledge base</text>
+<text x="180.0" y="446.5" class="s ctr">rules, procedures, documents,</text>
+<text x="180.0" y="462.0" class="s ctr">decisions on graph objects</text>
+<circle class="badge" cx="24.0" cy="409.0" r="10.5"/>
+<text class="badge-t" x="24.0" y="413.0">6</text>
+<rect class="bx" x="14.0" y="488.0" width="332.0" height="56.0" rx="12"/>
+<text x="180.0" y="503.5" class="t ctr">MCP gateway</text>
+<text x="180.0" y="522.5" class="s ctr">multi-tenant, read-only default,</text>
+<text x="180.0" y="538.0" class="s ctr">writes use a separate path</text>
+<circle class="badge" cx="24.0" cy="485.0" r="10.5"/>
+<text class="badge-t" x="24.0" y="489.0">7</text>
+<rect class="bx" x="14.0" y="564.0" width="332.0" height="56.0" rx="12"/>
+<text x="180.0" y="579.5" class="t ctr">Agents and clients</text>
+<text x="180.0" y="598.5" class="s ctr">Claude, other MCP clients,</text>
+<text x="180.0" y="614.0" class="s ctr">staff cockpit</text>
+<circle class="badge" cx="24.0" cy="561.0" r="10.5"/>
+<text class="badge-t" x="24.0" y="565.0">8</text>
+<path class="ar" d="M180.0 70.0 L180.0 88.0" marker-end="url(#dp-n-ah)"/>
+<path class="ar" d="M180.0 146.0 L180.0 164.0" marker-end="url(#dp-n-ah)"/>
+<path class="ar" d="M180.0 222.0 L180.0 240.0" marker-end="url(#dp-n-ah)"/>
+<path class="ar" d="M180.0 298.0 L180.0 334.0" marker-end="url(#dp-n-ah)"/>
+<path class="ar" d="M180.0 392.0 L180.0 410.0" marker-end="url(#dp-n-ah)"/>
+<path class="ar" d="M180.0 468.0 L180.0 486.0" marker-end="url(#dp-n-ah)"/>
+<path class="ar" d="M180.0 544.0 L180.0 562.0" marker-end="url(#dp-n-ah)"/>
+<rect class="pill-hu" x="175.0" y="306.0" width="150.0" height="22" rx="11" stroke-width="1.2"/>
+<text class="pl pill-hu-t ctr" x="250.0" y="321.2">human review queue</text>
+<text class="lb ctr" x="180.0" y="648.0">Provenance and audit should follow each record.</text>
+<text class="lb ctr" x="180.0" y="666.0">Writes never use this path (see Figure 3).</text>
+<rect class="cl" x="14.0" y="684.0" width="14" height="14" rx="4"/>
+<text class="s" x="34.0" y="695.0">Claude</text>
+<rect class="hu" x="93.8" y="684.0" width="14" height="14" rx="4"/>
+<text class="s" x="113.8" y="695.0">Person</text>
+<rect class="da" x="14.0" y="706.0" width="14" height="14" rx="4"/>
+<text class="s" x="34.0" y="717.0">Data store</text>
+<rect class="bx" x="119.0" y="706.0" width="14" height="14" rx="4"/>
+<text class="s" x="139.0" y="717.0">Deterministic code</text>
+</svg></div><figcaption>Figure 1. The designed data path. Blue marks steps where a model runs, green marks people, amber marks data stores.</figcaption></figure>
+<div class="ar-tw"><table class="ar-tbl tbl-dp"><thead><tr><th scope="col">Stage</th><th scope="col">Design</th><th scope="col">Invariant</th></tr></thead><tbody><tr><th scope="row" data-l="Stage">1. Company tools</th><td data-l="Design">ERP, CRM, mail, documents and spreadsheets remain the system of record.</td><td data-l="Invariant">The twin build does not modify a source system.</td></tr><tr><th scope="row" data-l="Stage">2. Read-only connectors</th><td data-l="Design">One adapter per source type, behind a replaceable interface, with a conversion contract per type. Credentials are read-only.</td><td data-l="Invariant">No business object mirrors a single connector row.</td></tr><tr><th scope="row" data-l="Stage">3. Raw snapshots</th><td data-l="Design">Each pull is stored as captured, with a content hash and a capture time.</td><td data-l="Invariant">Snapshots are immutable, so later stages can rerun without calling the source.</td></tr><tr><th scope="row" data-l="Stage">4. Extraction</th><td data-l="Design">Claude turns snapshots into candidate objects, links and properties that fit the closed typology.</td><td data-l="Invariant">Output is validated against the schema, and each candidate points to the span it came from. Malformed output is rejected and logged.</td></tr><tr><th scope="row" data-l="Stage">5. Typed canonical graph</th><td data-l="Design">Entity resolution (section 4) merges candidates into canonical objects, stored as dated versions.</td><td data-l="Invariant">Canonical ids are immutable. Source references stay attached as system and external-id pairs.</td></tr><tr><th scope="row" data-l="Stage">6. Knowledge base</th><td data-l="Design">Rules, procedures, documents and decisions attach to the objects they govern (section 6).</td><td data-l="Invariant">An item without a valid attachment point is held back from publication.</td></tr><tr><th scope="row" data-l="Stage">7. MCP gateway</th><td data-l="Design">Tools are generated from each tenant’s schema and served per tenant (section 7).</td><td data-l="Invariant">Read-only by default. Writes follow the separate approval path.</td></tr><tr><th scope="row" data-l="Stage">8. Agents and clients</th><td data-l="Design">Claude, other MCP clients, a staff cockpit.</td><td data-l="Invariant">Any of them can be swapped without changing the twin.</td></tr></tbody></table></div></div></section>
+<section class="ar-sec" id="ontology" aria-labelledby="h-ontology"><div class="ar-wrap"><div class="ar-sh"><span class="ar-num" aria-hidden="true">03</span><h2 id="h-ontology">Ontology-first model</h2><span class="ar-chip is-proto">Prototyped</span></div><p class="ar-status">A closed typology was used on one client’s documents and in a legal-corpus prototype. The per-company design below is the target.</p>
+<p>The ontology comes before the data. For each company we will write a closed typology: a finite list of object types and link types, each with typed properties, identity rules and cardinalities. Extraction will emit only instances of declared types. If the schema cannot place something, it will go to a quarantine list for a person to look at, and no new type will appear on its own. A change to the typology will be a versioned schema change that a person reviews and diffs like code.</p>
+<h3>What a type declaration carries</h3>
+<dl class="ar-defs"><div><dt>Identity</dt><dd>The fields that identify an instance, and how it is matched across sources.</dd></div><div><dt>Typed properties</dt><dd>Scalar types, enumerations, money with currency, dates, references, computed properties.</dd></div><div><dt>Links</dt><dd>Named, directed, typed at both ends, with a cardinality.</dd></div><div><dt>Source mappings</dt><dd>How each connected system’s records map onto the type, with the mapping version.</dd></div><div><dt>Constraints</dt><dd>Required fields, allowed ranges and cross-field checks, run at extraction time.</dd></div><div><dt>Version</dt><dd>Every change is a new schema version, and data records the version it conforms to.</dd></div></dl>
+<h3>Why closed rather than open</h3>
+<ul><li>A reviewer can read a company’s whole vocabulary in one sitting and diff it between versions. An open-ended vocabulary cannot be reviewed that way.</li><li>With a finite set of types and links, each question will be a parameterised traversal over known shapes. No model will write free-form queries, so the query surface can be listed, tested and permissioned.</li><li>Extraction output will be checked against the schema, so an invented type or field will be rejected before it reaches the graph.</li><li>The gateway will generate its tools from the schema (section 7). The tool list will follow the ontology, and a schema change will change the tools.</li></ul>
+<p>The typology can still grow, through reviewed versions only.</p></div></section>
+<section class="ar-sec" id="entity-resolution" aria-labelledby="h-entity-resolution"><div class="ar-wrap"><div class="ar-sh"><span class="ar-num" aria-hidden="true">04</span><h2 id="h-entity-resolution">Entity resolution</h2><span class="ar-chip is-proto">Prototyped</span></div><p class="ar-status">One matching pass ran with Claude on synthetic exports. Scoring, routing and the review queue are specified and unbuilt.</p>
+<p>One client can appear as a line in the CRM, an invoice header in the ERP, a short name in a spreadsheet and a sender in a mail thread. Resolution is designed to turn those mentions into one canonical object, with a score, a reason and a way back.</p>
+<figure class="ar-fig" id="fig-entity-resolution"><div class="ar-svg-w"><svg class="dg" viewBox="0 0 960 508" role="img" aria-labelledby="er-w-ti er-w-de" preserveAspectRatio="xMidYMid meet">
+<title id="er-w-ti">Entity resolution pipeline</title><desc id="er-w-de">Mentions are grouped by blocking, scored in pairs and routed by score band. Strong matches link; ambiguous pairs go to Claude, which returns a verdict with a written rationale; uncertain verdicts go to a human review queue; clear non-matches stay distinct. Merges keep reversible lineage.</desc>
+<style>.dg text{font-family:'Schibsted Grotesk','Helvetica Neue',Arial,sans-serif;fill:#1d2433}
+.dg .t{font-size:14.5px;font-weight:600}
+.dg .s{font-size:12.5px;fill:#566078}
+.dg .h{font-size:11px;font-weight:700;letter-spacing:.09em;fill:#566078}
+.dg .lb{font-size:11.5px;font-weight:600;fill:#566078}
+.dg .pl{font-size:11.5px;font-weight:700}
+.dg .bg{fill:#fbfaf7}
+.dg .bx{fill:#fff;stroke:#bcc6e2;stroke-width:1.4}
+.dg .cl{fill:#e9eefb;stroke:#2f4b9c;stroke-width:1.7}
+.dg .hu{fill:#e6f5ed;stroke:#2e9e68;stroke-width:1.7}
+.dg .da{fill:#fdf3e1;stroke:#d9922b;stroke-width:1.5}
+.dg .dim{fill:#f6f7fb;stroke:#d5dbeb;stroke-width:1.2;stroke-dasharray:4 4}
+.dg .dim text,.dg text.dimt{fill:#8a93a8}
+.dg .pn{fill:#f6f7fb;stroke:#aab4d2;stroke-width:1.3}
+.dg .wall{fill:none;stroke:#aab4d2;stroke-width:1.3;stroke-dasharray:5 4}
+.dg .ar{fill:none;stroke:#2f4b9c;stroke-width:1.7}
+.dg .ard{fill:none;stroke:#b5bed8;stroke-width:1.5;stroke-dasharray:4 4}
+.dg .arh{fill:none;stroke:#2e9e68;stroke-width:1.7}
+.dg .badge{fill:#2f4b9c}
+.dg .badge-t{font-size:11px;font-weight:700;fill:#fff;text-anchor:middle}
+.dg .pill-cl{fill:#e9eefb;stroke:#9db0e6}
+.dg .pill-hu{fill:#e6f5ed;stroke:#8fd0b0}
+.dg .pill-da{fill:#fdf3e1;stroke:#ecc98c}
+.dg .pill-bx{fill:#fff;stroke:#bcc6e2}
+.dg .pill-hu-t{fill:#1f6f4b}
+.dg .pill-cl-t{fill:#2f4b9c}
+.dg .ctr{text-anchor:middle}
+.dg .mid{text-anchor:middle}
+</style>
+<defs><marker id="er-w-ah" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.8L9.6 5L0 9.2z" fill="#2f4b9c"/></marker><marker id="er-w-ahh" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.8L9.6 5L0 9.2z" fill="#2e9e68"/></marker><marker id="er-w-ahd" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.8L9.6 5L0 9.2z" fill="#b5bed8"/></marker></defs>
+<rect class="bg" x="0" y="0" width="960" height="508" rx="16"/>
+<text class="h" x="20.0" y="28.0">CANDIDATES</text>
+<text class="h" x="540.0" y="28.0">ROUTE BY SCORE ZONE</text>
+<text class="h" x="800.0" y="28.0">OUTCOME</text>
+<rect class="bx" x="20.0" y="164.0" width="120.0" height="100.0" rx="12"/>
+<text x="80.0" y="193.8" class="t ctr">Mentions</text>
+<text x="80.0" y="212.8" class="s ctr">same client,</text>
+<text x="80.0" y="228.2" class="s ctr">several spellings,</text>
+<text x="80.0" y="243.8" class="s ctr">several tools</text>
+<rect class="bx" x="185.0" y="164.0" width="120.0" height="100.0" rx="12"/>
+<text x="245.0" y="201.5" class="t ctr">Blocking</text>
+<text x="245.0" y="220.5" class="s ctr">cheap keys cut</text>
+<text x="245.0" y="236.0" class="s ctr">the pair space</text>
+<rect class="bx" x="350.0" y="164.0" width="130.0" height="100.0" rx="12"/>
+<text x="415.0" y="192.5" class="t ctr">Pairwise</text>
+<text x="415.0" y="210.5" class="t ctr">scoring</text>
+<text x="415.0" y="229.5" class="s ctr">field-level</text>
+<text x="415.0" y="245.0" class="s ctr">evidence kept</text>
+<path class="ar" d="M140.0 214.0 L183.0 214.0" marker-end="url(#er-w-ah)"/>
+<path class="ar" d="M305.0 214.0 L348.0 214.0" marker-end="url(#er-w-ah)"/>
+<rect class="bx" x="540.0" y="44.0" width="190.0" height="76.0" rx="12"/>
+<text x="635.0" y="69.5" class="t ctr">Strong match</text>
+<text x="635.0" y="88.5" class="s ctr">exact identifiers or</text>
+<text x="635.0" y="104.0" class="s ctr">auto-merge zone: link</text>
+<rect class="cl" x="540.0" y="152.0" width="190.0" height="124.0" rx="12"/>
+<text x="635.0" y="186.0" class="t ctr">Claude arbitration</text>
+<text x="635.0" y="205.0" class="s ctr">ambiguous zone. Verdict:</text>
+<text x="635.0" y="220.5" class="s ctr">same, different or unsure,</text>
+<text x="635.0" y="236.0" class="s ctr">with a written rationale</text>
+<text x="635.0" y="251.5" class="s ctr">citing the field evidence</text>
+<rect class="bx" x="540.0" y="332.0" width="190.0" height="76.0" rx="12"/>
+<text x="635.0" y="357.5" class="t ctr">Stays distinct</text>
+<text x="635.0" y="376.5" class="s ctr">auto-reject zone, or a</text>
+<text x="635.0" y="392.0" class="s ctr">&quot;different&quot; verdict</text>
+<path class="ar" d="M480.0 214.0 L510.0 214.0"/>
+<path class="ar" d="M510.0 214.0 L510.0 82.0 L538.0 82.0" marker-end="url(#er-w-ah)"/>
+<path class="ar" d="M510.0 214.0 L538.0 214.0" marker-end="url(#er-w-ah)"/>
+<path class="ar" d="M510.0 214.0 L510.0 370.0 L538.0 370.0" marker-end="url(#er-w-ah)"/>
+<rect class="da" x="800.0" y="44.0" width="140.0" height="152.0" rx="12"/>
+<text x="870.0" y="90.8" class="t ctr">Merge with</text>
+<text x="870.0" y="108.8" class="t ctr">reversible lineage</text>
+<text x="870.0" y="127.8" class="s ctr">canonical id,</text>
+<text x="870.0" y="143.2" class="s ctr">source refs,</text>
+<text x="870.0" y="158.8" class="s ctr">decision log</text>
+<rect class="hu" x="800.0" y="238.0" width="140.0" height="98.0" rx="12"/>
+<text x="870.0" y="257.8" class="t ctr">Human review</text>
+<text x="870.0" y="275.8" class="t ctr">queue</text>
+<text x="870.0" y="294.8" class="s ctr">unsure or conflicting</text>
+<text x="870.0" y="310.2" class="s ctr">verdicts; rationale</text>
+<text x="870.0" y="325.8" class="s ctr">already written</text>
+<path class="ar" d="M730.0 82.0 L798.0 82.0" marker-end="url(#er-w-ah)"/>
+<path class="ar" d="M730.0 172.0 L798.0 172.0" marker-end="url(#er-w-ah)"/>
+<text class="lb ctr" x="764.0" y="162.0">same</text>
+<path class="ar" d="M635.0 276.0 L635.0 330.0" marker-end="url(#er-w-ah)"/>
+<text class="lb" x="641.0" y="308.0" style="text-anchor:start">different</text>
+<path class="ar" d="M730.0 256.0 L798.0 256.0" marker-end="url(#er-w-ah)"/>
+<text class="lb ctr" x="764.0" y="233.0">unsure or</text>
+<text class="lb ctr" x="764.0" y="246.0">conflict</text>
+<path class="arh" d="M870.0 238.0 L870.0 198.0" marker-end="url(#er-w-ahh)"/>
+<text class="lb" x="880.0" y="222.0" style="text-anchor:start">accept</text>
+<path class="arh" d="M870.0 336.0 L870.0 370.0 L732.0 370.0" marker-end="url(#er-w-ahh)"/>
+<text class="lb" x="880.0" y="358.0" style="text-anchor:start">reject</text>
+<text x="480.0" y="438.0" class="s ctr">Each decision will store score, evidence, rationale, model version and reviewer, and a merge can be undone from its lineage.</text>
+<text x="480.0" y="458.0" class="s ctr">Until enough human-reviewed pairs exist to calibrate the score, every Claude verdict goes to the human queue.</text>
+<rect class="cl" x="20.0" y="478.0" width="14" height="14" rx="4"/>
+<text class="s" x="40.0" y="489.0">Claude</text>
+<rect class="hu" x="99.8" y="478.0" width="14" height="14" rx="4"/>
+<text class="s" x="119.8" y="489.0">Person</text>
+<rect class="da" x="179.6" y="478.0" width="14" height="14" rx="4"/>
+<text class="s" x="199.6" y="489.0">Data store</text>
+<rect class="bx" x="284.6" y="478.0" width="14" height="14" rx="4"/>
+<text class="s" x="304.6" y="489.0">Deterministic code</text>
+</svg></div><div class="ar-svg-n"><svg class="dg" viewBox="0 0 360 718" role="img" aria-labelledby="er-n-ti er-n-de" preserveAspectRatio="xMidYMid meet">
+<title id="er-n-ti">Entity resolution pipeline</title><desc id="er-n-de">Mentions, blocking and pairwise scoring feed a routing step with three exits. A strong match links and merges with reversible lineage. An ambiguous pair goes to Claude arbitration; a confident verdict merges, an uncertain one goes to a human review queue, whose accepted decisions merge and whose rejections keep the pair distinct. A clear non-match stays distinct.</desc>
+<style>.dg text{font-family:'Schibsted Grotesk','Helvetica Neue',Arial,sans-serif;fill:#1d2433}
+.dg .t{font-size:14.5px;font-weight:600}
+.dg .s{font-size:12.5px;fill:#566078}
+.dg .h{font-size:11px;font-weight:700;letter-spacing:.09em;fill:#566078}
+.dg .lb{font-size:11.5px;font-weight:600;fill:#566078}
+.dg .pl{font-size:11.5px;font-weight:700}
+.dg .bg{fill:#fbfaf7}
+.dg .bx{fill:#fff;stroke:#bcc6e2;stroke-width:1.4}
+.dg .cl{fill:#e9eefb;stroke:#2f4b9c;stroke-width:1.7}
+.dg .hu{fill:#e6f5ed;stroke:#2e9e68;stroke-width:1.7}
+.dg .da{fill:#fdf3e1;stroke:#d9922b;stroke-width:1.5}
+.dg .dim{fill:#f6f7fb;stroke:#d5dbeb;stroke-width:1.2;stroke-dasharray:4 4}
+.dg .dim text,.dg text.dimt{fill:#8a93a8}
+.dg .pn{fill:#f6f7fb;stroke:#aab4d2;stroke-width:1.3}
+.dg .wall{fill:none;stroke:#aab4d2;stroke-width:1.3;stroke-dasharray:5 4}
+.dg .ar{fill:none;stroke:#2f4b9c;stroke-width:1.7}
+.dg .ard{fill:none;stroke:#b5bed8;stroke-width:1.5;stroke-dasharray:4 4}
+.dg .arh{fill:none;stroke:#2e9e68;stroke-width:1.7}
+.dg .badge{fill:#2f4b9c}
+.dg .badge-t{font-size:11px;font-weight:700;fill:#fff;text-anchor:middle}
+.dg .pill-cl{fill:#e9eefb;stroke:#9db0e6}
+.dg .pill-hu{fill:#e6f5ed;stroke:#8fd0b0}
+.dg .pill-da{fill:#fdf3e1;stroke:#ecc98c}
+.dg .pill-bx{fill:#fff;stroke:#bcc6e2}
+.dg .pill-hu-t{fill:#1f6f4b}
+.dg .pill-cl-t{fill:#2f4b9c}
+.dg .ctr{text-anchor:middle}
+.dg .mid{text-anchor:middle}
+</style>
+<defs><marker id="er-n-ah" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.8L9.6 5L0 9.2z" fill="#2f4b9c"/></marker><marker id="er-n-ahh" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.8L9.6 5L0 9.2z" fill="#2e9e68"/></marker><marker id="er-n-ahd" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.8L9.6 5L0 9.2z" fill="#b5bed8"/></marker></defs>
+<rect class="bg" x="0" y="0" width="360" height="718" rx="16"/>
+<rect class="bx" x="14.0" y="14.0" width="332.0" height="52.0" rx="12"/>
+<text x="180.0" y="35.2" class="t ctr">Mentions</text>
+<text x="180.0" y="54.2" class="s ctr">same client, several spellings, several tools</text>
+<rect class="bx" x="14.0" y="84.0" width="332.0" height="52.0" rx="12"/>
+<text x="180.0" y="105.2" class="t ctr">Blocking</text>
+<text x="180.0" y="124.2" class="s ctr">cheap keys cut the pair space</text>
+<rect class="bx" x="14.0" y="154.0" width="332.0" height="52.0" rx="12"/>
+<text x="180.0" y="175.2" class="t ctr">Pairwise scoring</text>
+<text x="180.0" y="194.2" class="s ctr">field-level evidence is kept</text>
+<path class="ar" d="M180.0 66.0 L180.0 82.0" marker-end="url(#er-n-ah)"/>
+<path class="ar" d="M180.0 136.0 L180.0 152.0" marker-end="url(#er-n-ah)"/>
+<path class="ar" d="M180.0 206.0 L180.0 218.0"/>
+<path class="ar" d="M60.0 218.0 L300.0 218.0"/>
+<path class="ar" d="M60.0 218.0 L60.0 230.0" marker-end="url(#er-n-ah)"/>
+<path class="ar" d="M180.0 218.0 L180.0 230.0" marker-end="url(#er-n-ah)"/>
+<path class="ar" d="M300.0 218.0 L300.0 230.0" marker-end="url(#er-n-ah)"/>
+<rect class="bx" x="14.0" y="232.0" width="92.0" height="62.0" rx="10"/>
+<text x="60.0" y="258.2" class="t ctr">Strong</text>
+<text x="60.0" y="277.2" class="s ctr">match</text>
+<rect class="cl" x="126.0" y="232.0" width="108.0" height="62.0" rx="10"/>
+<text x="180.0" y="258.2" class="t ctr">Ambiguous</text>
+<text x="180.0" y="277.2" class="s ctr">pair</text>
+<rect class="bx" x="254.0" y="232.0" width="92.0" height="62.0" rx="10"/>
+<text x="300.0" y="258.2" class="t ctr">Clear</text>
+<text x="300.0" y="277.2" class="s ctr">non-match</text>
+<path class="ar" d="M180.0 294.0 L180.0 314.0" marker-end="url(#er-n-ah)"/>
+<rect class="cl" x="126.0" y="316.0" width="108.0" height="104.0" rx="10"/>
+<text x="180.0" y="338.8" class="t ctr">Claude</text>
+<text x="180.0" y="356.8" class="t ctr">arbitration</text>
+<text x="180.0" y="375.8" class="s ctr">same, different</text>
+<text x="180.0" y="391.2" class="s ctr">or unsure,</text>
+<text x="180.0" y="406.8" class="s ctr">with rationale</text>
+<path class="ar" d="M180.0 420.0 L180.0 446.0" marker-end="url(#er-n-ah)"/>
+<text class="lb" x="188.0" y="434.0" style="text-anchor:start">unsure or</text>
+<text class="lb" x="188.0" y="446.0" style="text-anchor:start">conflict</text>
+<rect class="hu" x="126.0" y="448.0" width="108.0" height="100.0" rx="10"/>
+<text x="180.0" y="468.8" class="t ctr">Human review</text>
+<text x="180.0" y="486.8" class="t ctr">queue</text>
+<text x="180.0" y="505.8" class="s ctr">unsure or</text>
+<text x="180.0" y="521.2" class="s ctr">conflicting</text>
+<text x="180.0" y="536.8" class="s ctr">verdicts</text>
+<rect class="da" x="14.0" y="576.0" width="220.0" height="84.0" rx="12"/>
+<text x="124.0" y="596.5" class="t ctr">Merge with</text>
+<text x="124.0" y="614.5" class="t ctr">reversible lineage</text>
+<text x="124.0" y="633.5" class="s ctr">canonical id, source refs,</text>
+<text x="124.0" y="649.0" class="s ctr">decision log</text>
+<rect class="bx" x="254.0" y="576.0" width="92.0" height="84.0" rx="10"/>
+<text x="300.0" y="596.5" class="t ctr">Reject</text>
+<text x="300.0" y="614.5" class="t ctr">exit</text>
+<text x="300.0" y="633.5" class="s ctr">pair stays</text>
+<text x="300.0" y="649.0" class="s ctr">distinct</text>
+<path class="ar" d="M60.0 294.0 L60.0 574.0" marker-end="url(#er-n-ah)"/>
+<path class="ar" d="M126.0 368.0 L60.0 368.0"/>
+<text class="lb ctr" x="93.0" y="362.0">same</text>
+<path class="ar" d="M234.0 368.0 L300.0 368.0"/>
+<text class="lb ctr" x="267.0" y="362.0">different</text>
+<path class="arh" d="M180.0 548.0 L180.0 574.0" marker-end="url(#er-n-ahh)"/>
+<text class="lb" x="188.0" y="567.0" style="text-anchor:start">accept</text>
+<path class="ar" d="M300.0 294.0 L300.0 574.0" marker-end="url(#er-n-ah)"/>
+<path class="arh" d="M234.0 498.0 L300.0 498.0"/>
+<text class="lb ctr" x="267.0" y="492.0">reject</text>
+<text class="lb ctr" x="180.0" y="684.0">Each decision will be logged with score, evidence and reviewer.</text>
+<text class="lb ctr" x="180.0" y="702.0">Until the score is calibrated, every verdict goes to the queue.</text>
+</svg></div><figcaption>Figure 2. Entity resolution as designed. Strong matches link, ambiguous pairs go to Claude, and uncertain verdicts go to a person.</figcaption></figure>
+<ol><li><strong>Exact rules.</strong> Shared identifiers (registration numbers, account ids, verified email addresses) will link mentions deterministically, with no model involved.</li><li><strong>Blocking.</strong> Cheap keys (normalised name tokens, identifier prefixes, phonetic and n-gram keys, shared contacts) will group mentions into blocks, and only mentions in the same block will be compared.</li><li><strong>Pairwise scoring.</strong> Within a block, each pair will get field-level similarity features chosen per type (names, addresses, amounts, dates, shared relations). They will combine into a calibrated score, with the per-field evidence kept beside it.</li><li><strong>Routing by score zone.</strong> The calibrated pairwise score will route each pair into one of three zones: an auto-merge zone, an auto-reject zone, and an ambiguous zone that goes to Claude.</li><li><strong>Claude arbitration.</strong> Claude will receive the two mentions, the field evidence and the surrounding graph context, and return a verdict (same, different or unsure) with a written justification citing that evidence. Sonnet is planned for the volume, Opus for contested or high-impact cases.</li><li><strong>Verdicts and the human queue.</strong> A “same” verdict that the score supports will merge, and a “different” one will take the reject exit. An “unsure” verdict, or any verdict that goes against the score, will go to a person with the rationale already written. The zone boundaries will apply to the calibrated score from step 3, validated against reviewed pairs, and never to a confidence the model reports about itself. Until enough reviewed pairs exist to calibrate it, every Claude verdict will go to the queue. Each accept, reject or split will be stored as a labelled example.</li><li><strong>Merge with reversible lineage.</strong> A merge will be recorded as an event and will overwrite nothing. The canonical object will keep its member mentions and their source references, and the log will record score, evidence, rationale, model version and reviewer. An unmerge will replay from that log.</li></ol>
+<h3>Safeguards</h3>
+<ul><li>Rejected pairs will go into a cannot-link memory and will never be proposed again. Every merge will be checked against that memory, so a chain of plausible links cannot join two things that a person kept apart.</li><li>A match across languages, regions or legal entities will never be auto-confirmed. It will stay marked “to confirm” until a person validates it.</li></ul>
+<p>What ran so far: one matching pass on synthetic exports, with the same client written several ways across an ERP export, a timesheet and a tracking spreadsheet. Claude resolved the variants to one entity, gave a reason and flagged a mismatch in amounts between the sources. We have no accuracy figures yet. Measuring them per client is the job of the eval sets in section 8.</p></div></section>
+<section class="ar-sec" id="provenance" aria-labelledby="h-provenance"><div class="ar-wrap"><div class="ar-sh"><span class="ar-num" aria-hidden="true">05</span><h2 id="h-provenance">Provenance per field, versions validated by people</h2><span class="ar-chip is-proto">Prototyped</span></div><p class="ar-status">Prototypes keep source references and frozen traces. The full per-field model, with both time axes, is specified and not built.</p>
+<p>Each value will be stored as a fact with its own history instead of a bare column value.</p>
+<div class="ar-rec" role="group" aria-label="Fields of a stored fact"><div class="ar-rec-h">One stored fact</div><dl><div><dt>value</dt><dd>the value itself, typed by the schema</dd></div><div><dt>source</dt><dd>system, external id, snapshot id and the span: page, cell or character range</dd></div><div><dt>method</dt><dd>a deterministic rule, or the model and its version</dd></div><div><dt>status</dt><dd>candidate, validated or rejected</dd></div><div><dt>valid time</dt><dd>from and to: when it was true for the company</dd></div><div><dt>transaction time</dt><dd>when the twin recorded it</dd></div><div><dt>validation</dt><dd>who validated it, and when</dd></div></dl></div>
+<h3>A bitemporal model</h3>
+<p>The store will be bitemporal. Valid time says when something was true for the company, and transaction time says when the twin recorded it. Two questions then have exact answers: what was true on 3 March, and what did we believe on 3 March. A correction will overwrite nothing. It will add a version with a later transaction time, so earlier answers can be reproduced.</p>
+<h3>Validated versions</h3>
+<p>A fact will start as a candidate and become established once a person validates it. Depending on its role, an agent will see validated facts only, or also labelled candidates. When two sources disagree, both facts will be kept with their provenance.</p>
+<h3>Citations</h3>
+<p>The gateway will return each value with its provenance chain: version, source reference, snapshot, span. Before an answer ships, every cited span will be checked mechanically against the source text: the quoted passage must occur at the stated location and match its stored hash. An answer that cannot be traced will say so. Missing information is a result of its own (“missing fact”, “interpretation required”), so the system can abstain instead of filling the gap.</p></div></section>
+<section class="ar-sec" id="knowledge-base" aria-labelledby="h-knowledge-base"><div class="ar-wrap"><div class="ar-sh"><span class="ar-num" aria-hidden="true">06</span><h2 id="h-knowledge-base">Knowledge base</h2><span class="ar-chip is-proto">Prototyped</span></div><p class="ar-status">A legal-corpus prototype exercised verbatim documents and typed rules with four evaluation states. Attachment to graph objects is in design.</p>
+<p>The graph says what exists. The knowledge base is meant to say how the company works, and it will attach to graph objects so that one lookup returns both.</p>
+<div class="ar-tw"><table class="ar-tbl"><thead><tr><th scope="col">Item</th><th scope="col">What it is</th><th scope="col">Attaches to</th></tr></thead><tbody><tr><th scope="row" data-l="Item">Rules</th><td data-l="What it is">Typed, dated and sourced. Each rule is meant to evaluate, per object, to one of four states: satisfied, not satisfied, missing fact, interpretation required.</td><td data-l="Attaches to">An object type, evaluated per object.</td></tr><tr><th scope="row" data-l="Item">Procedures</th><td data-l="What it is">Ordered steps with owners and preconditions.</td><td data-l="Attaches to">The process or object type they govern.</td></tr><tr><th scope="row" data-l="Item">Documents</th><td data-l="What it is">Kept verbatim. Passages are anchored by document, page, version and content hash, so a quotation can be checked.</td><td data-l="Attaches to">The objects they describe.</td></tr><tr><th scope="row" data-l="Item">Decisions</th><td data-l="What it is">What was decided, by whom, when and why, and which earlier decision it replaces.</td><td data-l="Attaches to">The object concerned.</td></tr></tbody></table></div>
+<ul><li>Item types are specified as closed on function and open on subject: the type says what role an item plays (rule, procedure, source document, decision), and the subject stays free.</li><li>Validated knowledge will live as human-readable, versioned text files with structured metadata, and those files are the source of truth. Vector indexes, search indexes and graph views will derive from them and can be rebuilt at any time. Retrieval is only an index over the knowledge base.</li><li>For each question, the twin will assemble a bounded context pack: the relevant objects, their link neighbourhood, the attached knowledge and the provenance, within a token budget.</li><li>Facts extracted from a document will stay candidates until a person validates them.</li></ul></div></section>
+<section class="ar-sec" id="gateway" aria-labelledby="h-gateway"><div class="ar-wrap"><div class="ar-sh"><span class="ar-num" aria-hidden="true">07</span><h2 id="h-gateway">MCP gateway, multi-tenant</h2><span class="ar-chip is-design">In design</span></div><p class="ar-status">A read-only MCP server with schema-generated tools and a human-approval gate on outbound messages was prototyped on the legal corpus. Known gap: an agent with its own mail connector could bypass the send guard. Closing it is a design requirement here.</p>
+<p>One gateway is specified to expose each tenant’s twin to any MCP-compatible agent. As the only way in, it is where isolation, permissions, approvals and audit will be enforced.</p>
+<figure class="ar-fig" id="fig-mcp-gateway"><div class="ar-svg-w"><svg class="dg" viewBox="0 0 960 478" role="img" aria-labelledby="gw-w-ti gw-w-de" preserveAspectRatio="xMidYMid meet">
+<title id="gw-w-ti">Multi-tenant MCP gateway</title><desc id="gw-w-de">Agents connect to one MCP gateway. The gateway authenticates and binds the session to one tenant, generates tools from that tenant&#x27;s schema, and splits into a read path and a write path. Reads reach only the session&#x27;s tenant store. Writes are proposed actions that a person approves before they reach source systems. An append-only audit log records everything.</desc>
+<style>.dg text{font-family:'Schibsted Grotesk','Helvetica Neue',Arial,sans-serif;fill:#1d2433}
+.dg .t{font-size:14.5px;font-weight:600}
+.dg .s{font-size:12.5px;fill:#566078}
+.dg .h{font-size:11px;font-weight:700;letter-spacing:.09em;fill:#566078}
+.dg .lb{font-size:11.5px;font-weight:600;fill:#566078}
+.dg .pl{font-size:11.5px;font-weight:700}
+.dg .bg{fill:#fbfaf7}
+.dg .bx{fill:#fff;stroke:#bcc6e2;stroke-width:1.4}
+.dg .cl{fill:#e9eefb;stroke:#2f4b9c;stroke-width:1.7}
+.dg .hu{fill:#e6f5ed;stroke:#2e9e68;stroke-width:1.7}
+.dg .da{fill:#fdf3e1;stroke:#d9922b;stroke-width:1.5}
+.dg .dim{fill:#f6f7fb;stroke:#d5dbeb;stroke-width:1.2;stroke-dasharray:4 4}
+.dg .dim text,.dg text.dimt{fill:#8a93a8}
+.dg .pn{fill:#f6f7fb;stroke:#aab4d2;stroke-width:1.3}
+.dg .wall{fill:none;stroke:#aab4d2;stroke-width:1.3;stroke-dasharray:5 4}
+.dg .ar{fill:none;stroke:#2f4b9c;stroke-width:1.7}
+.dg .ard{fill:none;stroke:#b5bed8;stroke-width:1.5;stroke-dasharray:4 4}
+.dg .arh{fill:none;stroke:#2e9e68;stroke-width:1.7}
+.dg .badge{fill:#2f4b9c}
+.dg .badge-t{font-size:11px;font-weight:700;fill:#fff;text-anchor:middle}
+.dg .pill-cl{fill:#e9eefb;stroke:#9db0e6}
+.dg .pill-hu{fill:#e6f5ed;stroke:#8fd0b0}
+.dg .pill-da{fill:#fdf3e1;stroke:#ecc98c}
+.dg .pill-bx{fill:#fff;stroke:#bcc6e2}
+.dg .pill-hu-t{fill:#1f6f4b}
+.dg .pill-cl-t{fill:#2f4b9c}
+.dg .ctr{text-anchor:middle}
+.dg .mid{text-anchor:middle}
+</style>
+<defs><marker id="gw-w-ah" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.8L9.6 5L0 9.2z" fill="#2f4b9c"/></marker><marker id="gw-w-ahh" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.8L9.6 5L0 9.2z" fill="#2e9e68"/></marker><marker id="gw-w-ahd" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.8L9.6 5L0 9.2z" fill="#b5bed8"/></marker></defs>
+<rect class="bg" x="0" y="0" width="960" height="478" rx="16"/>
+<text class="h" x="20.0" y="28.0">AGENTS AND CLIENTS</text>
+<rect class="bx" x="20.0" y="46.0" width="150.0" height="58.0" rx="12"/>
+<text x="95.0" y="70.2" class="t ctr">Claude</text>
+<text x="95.0" y="89.2" class="s ctr">agent or app</text>
+<path class="ar" d="M170.0 75.0 L192.0 75.0"/>
+<rect class="bx" x="20.0" y="122.0" width="150.0" height="58.0" rx="12"/>
+<text x="95.0" y="146.2" class="t ctr">Other MCP clients</text>
+<text x="95.0" y="165.2" class="s ctr">any compliant agent</text>
+<path class="ar" d="M170.0 151.0 L192.0 151.0"/>
+<rect class="bx" x="20.0" y="198.0" width="150.0" height="58.0" rx="12"/>
+<text x="95.0" y="222.2" class="t ctr">Staff cockpit</text>
+<text x="95.0" y="241.2" class="s ctr">chat for the team</text>
+<path class="ar" d="M170.0 227.0 L192.0 227.0"/>
+<path class="ar" d="M192.0 75.0 L192.0 227.0"/>
+<path class="ar" d="M192.0 151.0 L213.0 151.0" marker-end="url(#gw-w-ah)"/>
+<rect class="pn" x="215" y="34" width="450" height="316" rx="18"/>
+<text class="h" x="233.0" y="58.0">MCP GATEWAY, MULTI-TENANT</text>
+<rect class="bx" x="235.0" y="70.0" width="410.0" height="50.0" rx="12"/>
+<text x="440.0" y="90.2" class="t ctr">Authenticate, bind the session to one tenant</text>
+<text x="440.0" y="109.2" class="s ctr">tenant id is taken from the access token alone</text>
+<rect class="bx" x="235.0" y="140.0" width="410.0" height="50.0" rx="12"/>
+<text x="440.0" y="160.2" class="t ctr">Tools generated from that tenant&#x27;s schema</text>
+<text x="440.0" y="179.2" class="s ctr">the tool list follows the ontology; a role filters tools and fields</text>
+<path class="ar" d="M440.0 120.0 L440.0 138.0" marker-end="url(#gw-w-ah)"/>
+<rect class="hu" x="235.0" y="214.0" width="198.0" height="112.0" rx="12"/>
+<text x="334.0" y="249.8" class="t ctr">Write path</text>
+<text x="334.0" y="268.8" class="s ctr">propose, simulate,</text>
+<text x="334.0" y="284.2" class="s ctr">a person approves,</text>
+<text x="334.0" y="299.8" class="s ctr">re-check, execute once</text>
+<rect class="bx" x="447.0" y="214.0" width="198.0" height="112.0" rx="12"/>
+<text x="546.0" y="249.8" class="t ctr">Read path</text>
+<text x="546.0" y="268.8" class="s ctr">get, search, traverse,</text>
+<text x="546.0" y="284.2" class="s ctr">query knowledge;</text>
+<text x="546.0" y="299.8" class="s ctr">results carry provenance</text>
+<path class="ar" d="M334.0 190.0 L334.0 212.0" marker-end="url(#gw-w-ah)"/>
+<path class="ar" d="M546.0 190.0 L546.0 212.0" marker-end="url(#gw-w-ah)"/>
+<text class="h" x="700.0" y="28.0">TENANT STORES</text>
+<rect class="wall" x="692" y="38" width="246" height="204" rx="16" fill="none"/>
+<rect class="da" x="704.0" y="52.0" width="222.0" height="52.0" rx="10"/>
+<text x="815.0" y="73.2" class="t ctr">Tenant 1</text>
+<text x="815.0" y="92.2" class="s ctr">graph + knowledge base</text>
+<rect class="dim" x="704.0" y="116.0" width="222.0" height="52.0" rx="10"/>
+<text x="815.0" y="137.2" class="t ctr">Tenant 2</text>
+<text x="815.0" y="156.2" class="s ctr">no path by design</text>
+<rect class="dim" x="704.0" y="180.0" width="222.0" height="52.0" rx="10"/>
+<text x="815.0" y="201.2" class="t ctr">Tenant 3</text>
+<text x="815.0" y="220.2" class="s ctr">no path by design</text>
+<path class="ar" d="M645.0 270.0 L676.0 270.0 L676.0 78.0 L702.0 78.0" marker-end="url(#gw-w-ah)"/>
+<rect class="bx" x="704.0" y="290.0" width="222.0" height="58.0" rx="10"/>
+<text x="815.0" y="314.2" class="t ctr">Source systems</text>
+<text x="815.0" y="333.2" class="s ctr">ERP, CRM, mail, documents</text>
+<path class="arh" d="M334.0 326.0 L334.0 368.0 L676.0 368.0 L676.0 319.0 L702.0 319.0" marker-end="url(#gw-w-ahh)"/>
+<rect class="pill-hu" x="380.0" y="357.0" width="250.0" height="22" rx="11" stroke-width="1.2"/>
+<text class="pl pill-hu-t ctr" x="505.0" y="372.2">approved actions, separate connector</text>
+<rect class="bx" x="20.0" y="392.0" width="920.0" height="40.0" rx="10"/>
+<text x="480.0" y="416.5" class="t ctr">Append-only audit log per tenant: every read, proposal, approval, execution and refusal</text>
+<rect class="cl" x="20.0" y="452.0" width="14" height="14" rx="4"/>
+<text class="s" x="40.0" y="463.0">Claude</text>
+<rect class="hu" x="99.8" y="452.0" width="14" height="14" rx="4"/>
+<text class="s" x="119.8" y="463.0">Person</text>
+<rect class="da" x="179.6" y="452.0" width="14" height="14" rx="4"/>
+<text class="s" x="199.6" y="463.0">Data store</text>
+<rect class="bx" x="284.6" y="452.0" width="14" height="14" rx="4"/>
+<text class="s" x="304.6" y="463.0">Deterministic code</text>
+</svg></div><div class="ar-svg-n"><svg class="dg" viewBox="0 0 360 778" role="img" aria-labelledby="gw-n-ti gw-n-de" preserveAspectRatio="xMidYMid meet">
+<title id="gw-n-ti">Multi-tenant MCP gateway</title><desc id="gw-n-de">Agents connect to one MCP gateway that binds each session to one tenant, generates tools from the tenant&#x27;s schema and separates a read path from a write path. Reads reach only that tenant&#x27;s store. Writes are proposed actions a person approves before they reach source systems. An append-only audit log records everything.</desc>
+<style>.dg text{font-family:'Schibsted Grotesk','Helvetica Neue',Arial,sans-serif;fill:#1d2433}
+.dg .t{font-size:14.5px;font-weight:600}
+.dg .s{font-size:12.5px;fill:#566078}
+.dg .h{font-size:11px;font-weight:700;letter-spacing:.09em;fill:#566078}
+.dg .lb{font-size:11.5px;font-weight:600;fill:#566078}
+.dg .pl{font-size:11.5px;font-weight:700}
+.dg .bg{fill:#fbfaf7}
+.dg .bx{fill:#fff;stroke:#bcc6e2;stroke-width:1.4}
+.dg .cl{fill:#e9eefb;stroke:#2f4b9c;stroke-width:1.7}
+.dg .hu{fill:#e6f5ed;stroke:#2e9e68;stroke-width:1.7}
+.dg .da{fill:#fdf3e1;stroke:#d9922b;stroke-width:1.5}
+.dg .dim{fill:#f6f7fb;stroke:#d5dbeb;stroke-width:1.2;stroke-dasharray:4 4}
+.dg .dim text,.dg text.dimt{fill:#8a93a8}
+.dg .pn{fill:#f6f7fb;stroke:#aab4d2;stroke-width:1.3}
+.dg .wall{fill:none;stroke:#aab4d2;stroke-width:1.3;stroke-dasharray:5 4}
+.dg .ar{fill:none;stroke:#2f4b9c;stroke-width:1.7}
+.dg .ard{fill:none;stroke:#b5bed8;stroke-width:1.5;stroke-dasharray:4 4}
+.dg .arh{fill:none;stroke:#2e9e68;stroke-width:1.7}
+.dg .badge{fill:#2f4b9c}
+.dg .badge-t{font-size:11px;font-weight:700;fill:#fff;text-anchor:middle}
+.dg .pill-cl{fill:#e9eefb;stroke:#9db0e6}
+.dg .pill-hu{fill:#e6f5ed;stroke:#8fd0b0}
+.dg .pill-da{fill:#fdf3e1;stroke:#ecc98c}
+.dg .pill-bx{fill:#fff;stroke:#bcc6e2}
+.dg .pill-hu-t{fill:#1f6f4b}
+.dg .pill-cl-t{fill:#2f4b9c}
+.dg .ctr{text-anchor:middle}
+.dg .mid{text-anchor:middle}
+</style>
+<defs><marker id="gw-n-ah" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.8L9.6 5L0 9.2z" fill="#2f4b9c"/></marker><marker id="gw-n-ahh" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.8L9.6 5L0 9.2z" fill="#2e9e68"/></marker><marker id="gw-n-ahd" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0.8L9.6 5L0 9.2z" fill="#b5bed8"/></marker></defs>
+<rect class="bg" x="0" y="0" width="360" height="778" rx="16"/>
+<text class="h" x="14.0" y="24.0">AGENTS AND CLIENTS</text>
+<rect class="bx" x="10.0" y="34.0" width="108.0" height="50.0" rx="10"/>
+<text x="64.0" y="54.2" class="t ctr">Claude</text>
+<text x="64.0" y="73.2" class="s ctr">agent or app</text>
+<path class="ar" d="M64.0 84.0 L64.0 104.0"/>
+<rect class="bx" x="126.0" y="34.0" width="108.0" height="50.0" rx="10"/>
+<text x="180.0" y="54.2" class="t ctr">Other MCP</text>
+<text x="180.0" y="73.2" class="s ctr">any compliant</text>
+<path class="ar" d="M180.0 84.0 L180.0 104.0"/>
+<rect class="bx" x="242.0" y="34.0" width="108.0" height="50.0" rx="10"/>
+<text x="296.0" y="54.2" class="t ctr">Cockpit</text>
+<text x="296.0" y="73.2" class="s ctr">staff chat</text>
+<path class="ar" d="M296.0 84.0 L296.0 104.0"/>
+<path class="ar" d="M64.0 104.0 L296.0 104.0"/>
+<path class="ar" d="M180.0 104.0 L180.0 124.0" marker-end="url(#gw-n-ah)"/>
+<rect class="pn" x="8" y="126" width="344" height="372" rx="18"/>
+<text class="h" x="22.0" y="150.0">MCP GATEWAY, MULTI-TENANT</text>
+<rect class="bx" x="22.0" y="162.0" width="316.0" height="62.0" rx="12"/>
+<text x="180.0" y="180.5" class="t ctr">Authenticate, bind to one tenant</text>
+<text x="180.0" y="199.5" class="s ctr">tenant id is taken from</text>
+<text x="180.0" y="215.0" class="s ctr">the access token alone</text>
+<rect class="bx" x="22.0" y="246.0" width="316.0" height="62.0" rx="12"/>
+<text x="180.0" y="264.5" class="t ctr">Tools from the tenant&#x27;s schema</text>
+<text x="180.0" y="283.5" class="s ctr">the tool list follows the ontology;</text>
+<text x="180.0" y="299.0" class="s ctr">a role filters tools and fields</text>
+<path class="ar" d="M180.0 224.0 L180.0 244.0" marker-end="url(#gw-n-ah)"/>
+<path class="ar" d="M180.0 308.0 L180.0 322.0"/>
+<path class="ar" d="M98.0 322.0 L262.0 322.0"/>
+<path class="ar" d="M98.0 322.0 L98.0 338.0" marker-end="url(#gw-n-ah)"/>
+<path class="ar" d="M262.0 322.0 L262.0 338.0" marker-end="url(#gw-n-ah)"/>
+<rect class="bx" x="22.0" y="340.0" width="152.0" height="130.0" rx="10"/>
+<text x="98.0" y="377.0" class="t ctr">Read path</text>
+<text x="98.0" y="396.0" class="s ctr">get, search,</text>
+<text x="98.0" y="411.5" class="s ctr">traverse, query</text>
+<text x="98.0" y="427.0" class="s ctr">knowledge; results</text>
+<text x="98.0" y="442.5" class="s ctr">carry provenance</text>
+<rect class="hu" x="186.0" y="340.0" width="152.0" height="130.0" rx="10"/>
+<text x="262.0" y="377.0" class="t ctr">Write path</text>
+<text x="262.0" y="396.0" class="s ctr">propose, simulate,</text>
+<text x="262.0" y="411.5" class="s ctr">a person approves,</text>
+<text x="262.0" y="427.0" class="s ctr">re-check,</text>
+<text x="262.0" y="442.5" class="s ctr">execute once</text>
+<text class="h" x="190.0" y="530.0">SOURCES</text>
+<rect class="wall" x="8" y="522" width="168" height="170" rx="14" fill="none"/>
+<text class="h" x="22.0" y="546.0">STORES</text>
+<rect class="da" x="16.0" y="556.0" width="152.0" height="40.0" rx="9"/>
+<text x="92.0" y="580.5" class="t ctr">Tenant 1</text>
+<rect class="dim" x="16.0" y="602.0" width="152.0" height="40.0" rx="9"/>
+<text x="92.0" y="626.5" class="t ctr">Tenant 2</text>
+<rect class="dim" x="16.0" y="648.0" width="152.0" height="36.0" rx="9"/>
+<text x="92.0" y="670.5" class="t ctr">Tenant 3</text>
+<rect class="bx" x="190.0" y="548.0" width="156.0" height="66.0" rx="10"/>
+<text x="268.0" y="568.5" class="t ctr">Source systems</text>
+<text x="268.0" y="587.5" class="s ctr">ERP, CRM, mail,</text>
+<text x="268.0" y="603.0" class="s ctr">documents</text>
+<path class="ar" d="M98.0 470.0 L98.0 554.0" marker-end="url(#gw-n-ah)"/>
+<path class="arh" d="M262.0 470.0 L262.0 546.0" marker-end="url(#gw-n-ahh)"/>
+<rect class="pill-hu" x="197.0" y="497.0" width="130.0" height="22" rx="11" stroke-width="1.2"/>
+<text class="pl pill-hu-t ctr" x="262.0" y="512.2">approved actions</text>
+<text class="lb" x="190.0" y="640.0" style="text-anchor:start">Tenants 2 and 3:</text>
+<text class="lb" x="190.0" y="657.0" style="text-anchor:start">no path by design</text>
+<rect class="bx" x="14.0" y="710.0" width="332.0" height="52.0" rx="10"/>
+<text x="180.0" y="731.2" class="t ctr">Append-only audit log per tenant</text>
+<text x="180.0" y="750.2" class="s ctr">every read, proposal, approval, execution</text>
+</svg></div><figcaption>Figure 3. The gateway as designed. Reads reach one tenant’s store. Writes are proposed actions that a person approves.</figcaption></figure>
+<h3>Transport and authentication</h3>
+<p>The gateway is designed as a remote MCP server over streamable HTTP, with OAuth 2.1 authorization per tenant. The tenant id will be taken from the access token alone and validated on every request. A session will not be an authorization boundary.</p>
+<h3>Read path</h3>
+<ul><li>Tools will be generated from the tenant’s schema: get an object, search, traverse links, query attached knowledge, describe a type. A role will filter the tools and fields a session sees.</li><li>Each result will carry its provenance and validation status.</li></ul>
+<h3>Write path</h3>
+<p>Writes are specified as proposed actions, in seven steps.</p>
+<ol><li><strong>Describe.</strong> The agent reads the action’s contract: inputs, preconditions, effects.</li><li><strong>Simulate.</strong> The gateway computes a dry-run diff against current data.</li><li><strong>Plan.</strong> A plan is created, bound to the requesting actor and to the data version it was computed on.</li><li><strong>Approve.</strong> A named person approves or rejects. Nothing runs before that.</li><li><strong>Re-check.</strong> At execution time the gateway re-validates its invariants. If the data changed after approval, the action is refused and sent back for review.</li><li><strong>Execute once.</strong> Execution is idempotent and goes through a separate action connector. Only that connector holds write credentials, and only for approved actions. No agent will hold another route to a source system.</li><li><strong>Receipt and audit.</strong> The outcome is recorded, and a refusal carries a coded reason.</li></ol>
+<h3>Indirect prompt injection</h3>
+<p>Mail and documents that the twin ingests may contain instructions aimed at a model, so the design aims to limit the damage. Ingested content will be treated as data and quoted as material to analyse. The tools a model sees while it extracts or answers will be read-only and scoped to one tenant, and that model will have no outbound channel. The gateway, not the model, will compute the diff of any proposed write, and a person will approve it. A model that reads tool output stays influenceable, so injected text can still bias an answer or a proposed write. That residual risk is why every write needs human approval, and it is listed in the open questions (section 11).</p>
+<h3>Per-tenant isolation</h3>
+<p>Each tenant will get its own graph and knowledge store. No query path will span tenants: the tool layer is designed to receive a tenant-scoped handle, so no shared connection exists. Source-system credentials will be held per tenant, with read and write scopes kept apart. Every eval set is planned to include cross-tenant probes (section 8).</p>
+<h3>Audit log</h3>
+<p>The log will be append-only and kept per tenant. It will record each read, search, proposal, approval, execution and refusal with the actor, tool, arguments, returned facts and outcome, so a team member can reconstruct why an agent said or did something.</p></div></section>
+<section class="ar-sec" id="evals" aria-labelledby="h-evals"><div class="ar-wrap"><div class="ar-sh"><span class="ar-num" aria-hidden="true">08</span><h2 id="h-evals">Evals: replayed on every new model</h2><span class="ar-chip is-design">In design</span></div><p class="ar-status">Measured test sets were used on a prototype to compare retrieval variants. Per-client eval sets and replay on new models are not built.</p>
+<p>Each client twin is meant to have its own eval set, since correct means correct for that company’s data and rules. Before a twin’s model assignments change, the set will be replayed on the candidate model and compared with the pinned one.</p>
+<h3>What an eval set will contain</h3>
+<ul><li>Questions across objects and sources, each with the expected answer and the citations it must carry, validated by a person.</li><li>Entity-resolution cases (pairs known to be the same, to differ, or to be ambiguous) and extraction checks against a reviewed sample, per type.</li><li>Abstention cases: questions that must return “missing fact” or “interpretation required” instead of an answer.</li><li>Safety cases: write attempts that must stay proposals, and cross-tenant probes that must return nothing.</li></ul>
+<h3>The replay</h3>
+<ol><li>When a new Claude model is released, each tenant’s eval set will run on it for every pipeline step, with the current model as baseline.</li><li>Results will be compared per category against gates. A regression in span existence, claim support, abstention or safety will block the switch, whatever the other gains. Cost and latency will be recorded.</li><li>If the gates pass, the tenant’s model pin for that step will move. The previous pin will stay available for rollback, and the change will go into the audit log.</li></ol>
+<p>Two citation checks are planned. The deterministic one confirms that each cited span exists verbatim in the source. The model-graded one judges whether that span supports the claim, against a rubric, and the grader will be checked against samples a person has graded. Safety cases will be deterministic code.</p></div></section>
+<section class="ar-sec" id="claude" aria-labelledby="h-claude"><div class="ar-wrap"><div class="ar-sh"><span class="ar-num" aria-hidden="true">09</span><h2 id="h-claude">Where Claude sits at each step</h2><span class="ar-chip is-design">In design</span></div><p class="ar-status">This allocation is a design position and has not been measured in production. Each client’s eval results will tune it.</p>
+<div class="ar-tw"><table class="ar-tbl tbl-model"><thead><tr><th scope="col">Step</th><th scope="col">Planned role</th><th scope="col">Model</th><th scope="col">Why</th></tr></thead><tbody><tr><th scope="row" data-l="Step">Ontology design</th><td data-l="Planned role">Proposes the typology from sample exports, documents and an interview, and lists the open questions. A person reviews every type.</td><td data-l="Model">Opus</td><td data-l="Why">Judgement-heavy, done once per company.</td></tr><tr><th scope="row" data-l="Step">Extraction</th><td data-l="Planned role">Turns snapshots and documents into schema-validated candidates with source pointers.</td><td data-l="Model">Sonnet</td><td data-l="Why">High volume, bounded task, clear contract.</td></tr><tr><th scope="row" data-l="Step">Entity resolution, routine</th><td data-l="Planned role">Arbitrates ambiguous pairs with a written justification.</td><td data-l="Model">Sonnet</td><td data-l="Why">Volume, with the human queue behind it.</td></tr><tr><th scope="row" data-l="Step">Entity resolution, hard cases</th><td data-l="Planned role">Handles contested clusters, conflicting sources and escalations from the routine pass.</td><td data-l="Model">Opus</td><td data-l="Why">Few cases, and a wrong merge is costly.</td></tr><tr><th scope="row" data-l="Step">Classification and routing</th><td data-l="Planned role">Document type, language, duplicate detection, routing into queues.</td><td data-l="Model">Haiku</td><td data-l="Why">Mechanical, latency-sensitive, cheap.</td></tr><tr><th scope="row" data-l="Step">Knowledge authoring</th><td data-l="Planned role">Drafts rules and procedures from documents, with anchored passages. A person validates.</td><td data-l="Model">Sonnet</td><td data-l="Why">Bounded drafting with verification built in.</td></tr></tbody></table></div>
+<h3>Tooling and technique</h3>
+<div class="ar-tw"><table class="ar-tbl"><thead><tr><th scope="col">Item</th><th scope="col">What it does</th><th scope="col">Why</th></tr></thead><tbody><tr><th scope="row" data-l="Item">Claude Code and subagents</th><td data-l="What it does">We use them now to write connectors, mappings, tests and each client prototype. A person reviews every change.</td><td data-l="Why">It is the tooling we already build with every day.</td></tr><tr><th scope="row" data-l="Item">Prompt caching</th><td data-l="What it does">The stable company-model prefix (schema, glossary, rule index) will go first and be cached. The changing part, a batch or a question, will follow.</td><td data-l="Why">That prefix is large and identical across a tenant’s calls, within the cache window.</td></tr></tbody></table></div>
+<p>The cache is designed around a stable serialisation of the schema, with the breakpoint right after it. Tools sit ahead of the system prompt in the cached prefix, so each tenant’s tool list will be deterministic and byte-stable. A schema or tool change will invalidate the cache on purpose. A cached prefix is reused only within the cache lifetime, so a tenant with little traffic pays the cache write more often.</p></div></section>
+<section class="ar-sec" id="trajectory" aria-labelledby="h-trajectory"><div class="ar-wrap"><div class="ar-sh"><span class="ar-num" aria-hidden="true">10</span><h2 id="h-trajectory">Today and 2027</h2></div>
+<div class="ar-cols"><article class="ar-col"><span class="ar-kick">Today</span><h3>Done by hand, with Claude</h3><p>Since spring 2026 the two founders have built parts of this by hand with Claude, across three client engagements (property management, joinery, property development).</p><p>The pieces so far: a read-only adapter feeding a canonical model on one prototype, a typed extraction over one client’s documents, and an audit under way for a third client. A separate legal-corpus prototype exercised the knowledge base and the read-only MCP pattern.</p></article><article class="ar-col is-future"><span class="ar-kick">2027</span><h3>Plug and play</h3><p>In 2027 we aim to offer a plug-and-play platform. A company will connect its tools with read-only credentials. Claude agents will propose the ontology, build the twin and keep it current as sources change, and a person will validate what matters.</p><p>One gateway will serve every tenant, and evals will replay automatically on each new model. The founders will stop building each twin by hand and will review the exceptions.</p></article></div>
+<p>Four things will stay constant: ingestion with read-only credentials, a closed typology, provenance on every field, and a person’s approval before any write.</p></div></section>
+<section class="ar-sec" id="open-questions" aria-labelledby="h-open-questions"><div class="ar-wrap"><div class="ar-sh"><span class="ar-num" aria-hidden="true">11</span><h2 id="h-open-questions">Open questions we are working on</h2></div>
+<ul><li>How to show that tenant isolation holds, beyond testing it.</li><li>Where deterministic scoring should hand over to model arbitration in entity resolution, and how to evaluate that on messy exports.</li><li>The residual prompt-injection risk: a model that reads ingested text can still be biased, so how far an answer or a proposed write can be trusted.</li><li>Whether shared context or cache can leak across tenants, and how to keep them isolated.</li><li>Cache design for large company models whose schema changes, and its economics at low traffic.</li></ul></div></section>
+</main>
+
+<footer>
+  <div class="wrap ar-fwrap">
+    <p>Same dossier, with the diagrams as files: <a href="https://github.com/W33Dplz/socle-twin">github.com/W33Dplz/socle-twin</a></p>
+    <p>© 2026 Socle Twin, a project of Derivatives Academy (BCE 0804.022.310), Lasne. Contact: <a href="mailto:info@getsocle.com">info@getsocle.com</a></p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var hd = document.querySelector('header.top'), bg = hd.querySelector('.burger'), mn = hd.querySelector('#menu');
+  function open(on) { hd.classList.toggle('open', on); bg.setAttribute('aria-expanded', on ? 'true' : 'false'); }
+  bg.addEventListener('click', function (e) { e.stopPropagation(); open(!hd.classList.contains('open')); });
+  mn.addEventListener('click', function (e) { if (e.target.closest('a')) open(false); });
+  document.addEventListener('click', function (e) { if (!hd.contains(e.target)) open(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') open(false); });
+  var toc = document.querySelector('.ar-tocwrap');
+  if (toc && window.innerWidth < 720) toc.removeAttribute('open');
+})();
+</script>
+</body>
+</html>
