@@ -773,3 +773,16 @@ header.top.solid .menu nav.main{background:none}
 .cs.live .cfp.o7{animation-name:cfp7}.cs.live .cfg.o7{animation-name:cfg7}.cs.live .cfg.cfv.o7{animation-name:cfv7}
 
 .tw-ex{margin:28px 0 0;font-size:12px;color:var(--mute);text-align:right}
+
+/* ===== SOBRIETE (2026-10-12) : en-tete = logo + menu a trois lignes, rien d'autre ne flotte sur le film ===== */
+.faq-l{position:static}
+.chap.cap{bottom:56px}
+.chap#top{padding-bottom:0}
+@media (max-width:759px){
+  header.top{background:rgba(251,250,247,.97);box-shadow:0 1px 0 var(--hair)}
+  #story{padding-top:60px}
+  #stage{height:calc(100svh - 60px);min-height:0}
+  .chap#top{top:22px}
+  .chap.cap{bottom:28px}
+}
+footer p{text-wrap:pretty}
